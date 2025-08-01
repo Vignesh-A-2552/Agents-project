@@ -1,0 +1,252 @@
+import json
+from datetime import datetime
+from langgraph.graph import StateGraph, END
+from loguru import logger
+
+from models.types import CodeReviewState
+from .llm_service import LLMService
+from .prompt_service import PromptService
+
+
+class CodeReviewService(LLMService, PromptService):
+    def __init__(self):
+        logger.info("Initializing Code Review Service")
+        LLMService.__init__(self)
+        PromptService.__init__(self)
+        logger.success("Code Review Service initialized successfully")
+
+    async def parse_code_input(self, state: CodeReviewState) -> CodeReviewState:
+        logger.info(f"Parsing code input - Language: {state.get('language')}, File type: {state.get('file_type')}")
+        start_time = datetime.now()
+        
+        code = state["code"]
+        language = state["language"]
+        file_type = state["file_type"]
+
+        logger.debug(f"Code length: {len(code)} characters")
+
+        if not code or len(code) > 50000:
+            logger.error(f"Invalid code input: length={len(code)}")
+            raise ValueError("Invalid code input: empty or too large (max 50,000 characters).")
+        if language not in ["python", "javascript"]:
+            logger.error(f"Unsupported language: {language}")
+            raise ValueError("Unsupported programming language.")
+        if file_type not in ["py", "js"]:
+            logger.error(f"Unsupported file type: {file_type}")
+            raise ValueError("Unsupported file type.")
+
+        processing_time = (datetime.now() - start_time).total_seconds()
+        state["processing_time"] = processing_time
+        logger.success(f"Code input parsed successfully in {processing_time:.3f}s")
+        return state
+
+    async def analyze_syntax_style(self, state: CodeReviewState) -> CodeReviewState:
+        logger.info("Starting syntax and style analysis")
+        try:
+            # Syntax analysis
+            syntax_prompt_str = self.syntax_prompt.format(language=state["language"], code=state["code"])
+            syntax_response = await self.model.ainvoke(syntax_prompt_str)
+            
+            syntax_content = syntax_response if hasattr(syntax_response, 'content') else str(syntax_response)
+            syntax_result = self.extract_json_from_response(syntax_content)
+            state["syntax_issues"] = syntax_result.get("errors", [])
+
+            # Style analysis
+            format_prompt_str = self.format_prompt.format(language=state["language"], code=state["code"])
+            format_response = await self.model.ainvoke(format_prompt_str)
+            
+            format_content = format_response if hasattr(format_response, 'content') else str(format_response)
+            format_result = self.extract_json_from_response(format_content)
+            state["style_violations"] = format_result.get("style_violations", [])
+
+            # Comment quality analysis
+            comment_prompt_str = self.comment_quality_prompt.format(language=state["language"], code=state["code"])
+            comment_response = await self.model.ainvoke(comment_prompt_str)
+            
+            comment_content = comment_response if hasattr(comment_response, 'content') else str(comment_response)
+            comment_result = self.extract_json_from_response(comment_content)
+            
+            if state.get("style_violations") is None:
+                state["style_violations"] = []
+            state["style_violations"].extend(comment_result.get("issues", []))
+
+        except Exception as e:
+            logger.error(f"Error in syntax/style analysis: {e}", exc_info=True)
+            state["syntax_issues"] = [{"error": f"Syntax analysis failed: {str(e)}"}]
+            state["style_violations"] = [{"error": f"Style analysis failed: {str(e)}"}]
+        
+        return state
+
+    async def security_scan(self, state: CodeReviewState) -> CodeReviewState:
+        logger.info("Starting security vulnerability scan")
+        try:
+            prompt_str = self.security_scan_prompt.format(language=state["language"], code=state["code"])
+            response = await self.model.ainvoke(prompt_str)
+            
+            content = response if hasattr(response, 'content') else str(response)
+            result = self.extract_json_from_response(content)
+            state["security_vulnerabilities"] = result.get("issues", [])
+            
+        except Exception as e:
+            logger.error(f"Error in security scan: {e}", exc_info=True)
+            state["security_vulnerabilities"] = [{"error": f"Security scan failed: {str(e)}"}]
+        
+        return state
+
+    async def performance_analysis(self, state: CodeReviewState) -> CodeReviewState:
+        logger.info("Starting performance analysis")
+        state["performance_issues"] = []
+        
+        try:
+            aspects = ["time complexity", "memory usage", "query optimization", "loop efficiency", "resource management"]
+            
+            for aspect in aspects:
+                try:
+                    prompt_str = self.performance_prompt.format(
+                        language=state["language"], 
+                        code=state["code"], 
+                        aspect=aspect
+                    )
+                    response = await self.model.ainvoke(prompt_str)
+                    
+                    content = response if hasattr(response, 'content') else str(response)
+                    result = self.extract_json_from_response(content)
+                    
+                    issues = result.get("issues", [])
+                    state["performance_issues"].extend(issues)
+                    
+                except Exception as e:
+                    logger.error(f"Error analyzing {aspect}: {e}", exc_info=True)
+                    state["performance_issues"].append({"error": f"Failed to analyze {aspect}: {str(e)}"})
+                    
+        except Exception as e:
+            logger.error(f"Error in performance analysis: {e}", exc_info=True)
+            state["performance_issues"] = [{"error": f"Performance analysis failed: {str(e)}"}]
+        
+        return state
+
+    async def best_practices_check(self, state: CodeReviewState) -> CodeReviewState:
+        logger.info("Starting best practices check")
+        try:
+            prompt_str = self.best_practices_prompt.format(language=state["language"], code=state["code"])
+            response = await self.model.ainvoke(prompt_str)
+            
+            content = response if hasattr(response, 'content') else str(response)
+            result = self.extract_json_from_response(content)
+            state["best_practice_violations"] = result.get("violations", [])
+            
+        except Exception as e:
+            logger.error(f"Error in best practices check: {e}", exc_info=True)
+            state["best_practice_violations"] = [{"error": f"Best practices check failed: {str(e)}"}]
+        
+        # Calculate severity level
+        total_issues = (
+            len([x for x in (state.get("syntax_issues") or []) if not x.get("error")]) +
+            len([x for x in (state.get("security_vulnerabilities") or []) if not x.get("error")]) +
+            len([x for x in (state.get("performance_issues") or []) if not x.get("error")]) +
+            len([x for x in (state.get("style_violations") or []) if not x.get("error")]) +
+            len([x for x in (state.get("best_practice_violations") or []) if not x.get("error")])
+        )
+        
+        if total_issues >= 10:
+            state["severity_level"] = "critical"
+        elif total_issues >= 5:
+            state["severity_level"] = "high"
+        elif total_issues >= 2:
+            state["severity_level"] = "medium"
+        else:
+            state["severity_level"] = "low"
+            
+        return state
+
+    async def generate_explanations(self, state: CodeReviewState) -> CodeReviewState:
+        logger.info("Generating explanations and suggestions")
+        try:
+            issues = json.dumps({
+                "syntax": state.get("syntax_issues", []),
+                "security": state.get("security_vulnerabilities", []),
+                "performance": state.get("performance_issues", []),
+                "style": state.get("style_violations", []),
+                "best_practices": state.get("best_practice_violations", [])
+            })
+
+            prompt_str = self.explanation_prompt.format(
+                language=state["language"],
+                code=state["code"][:500],
+                issues=issues
+            )
+
+            response = await self.model.ainvoke(prompt_str)
+            content = response if hasattr(response, 'content') else str(response)
+            result = self.extract_json_from_response(content)
+            
+            state["explanations"] = result.get("explanations", [])
+            state["improvement_suggestions"] = result.get("suggestions", [])
+            state["learning_resources"] = result.get("resources", [])
+            
+        except Exception as e:
+            logger.error(f"Error generating explanations: {e}", exc_info=True)
+            state["explanations"] = [{"error": str(e)}]
+            state["improvement_suggestions"] = []
+            state["learning_resources"] = []
+        
+        return state
+
+    async def generate_final_report(self, state: CodeReviewState) -> CodeReviewState:
+        state["requires_human_review"] = state.get("severity_level") in ["high", "critical"]
+        state["analysis_complete"] = True
+        return state
+
+    async def human_escalation(self, state: CodeReviewState) -> CodeReviewState:
+        state["requires_human_review"] = True
+        return state
+
+    async def detailed_analysis(self, state: CodeReviewState) -> CodeReviewState:
+        return state
+
+    async def route_by_severity(self, state: CodeReviewState) -> str:
+        severity = state.get("severity_level", "low")
+        if severity == "critical":
+            return "human_escalation"
+        elif severity == "high":
+            return "detailed_analysis"
+        else:
+            return "educational_content"
+
+    async def build_agent(self):
+        logger.info("Building code review workflow graph")
+        workflow = StateGraph(CodeReviewState)
+        workflow.add_node("parse_input", self.parse_code_input)
+        workflow.add_node("syntax_analysis", self.analyze_syntax_style)
+        workflow.add_node("security_scan", self.security_scan)
+        workflow.add_node("performance_check", self.performance_analysis)
+        workflow.add_node("best_practices", self.best_practices_check)
+        workflow.add_node("generate_report", self.generate_final_report)
+        workflow.add_node("educational_content", self.generate_explanations)
+        workflow.add_node("human_escalation", self.human_escalation)
+        workflow.add_node("detailed_analysis", self.detailed_analysis)
+
+        workflow.add_edge("parse_input", "syntax_analysis")
+        workflow.add_edge("syntax_analysis", "security_scan")
+        workflow.add_edge("security_scan", "performance_check")
+        workflow.add_edge("performance_check", "best_practices")
+
+        workflow.add_conditional_edges(
+            "best_practices",
+            self.route_by_severity,
+            {
+                "human_escalation": "human_escalation",
+                "detailed_analysis": "detailed_analysis", 
+                "educational_content": "educational_content"
+            }
+        )
+
+        workflow.add_edge("detailed_analysis", "educational_content")
+        workflow.add_edge("human_escalation", "educational_content")
+        workflow.add_edge("educational_content", "generate_report")
+        workflow.add_edge("generate_report", END)
+
+        workflow.set_entry_point("parse_input")
+        compiled_workflow = workflow.compile()
+        logger.success("Code review workflow compiled successfully")
+        return compiled_workflow

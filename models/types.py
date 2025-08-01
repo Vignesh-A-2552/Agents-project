@@ -1,0 +1,21 @@
+from typing import TypedDict, List, Optional, Dict, Any
+from typing_extensions import Required, NotRequired
+
+
+class CodeReviewState(TypedDict):
+    code: Required[str]
+    language: Required[str]
+    file_type: Required[str]
+    context: NotRequired[Optional[str]]
+    syntax_issues: NotRequired[Optional[List[dict]]]
+    security_vulnerabilities: NotRequired[Optional[List[dict]]]
+    performance_issues: NotRequired[Optional[List[dict]]]
+    style_violations: NotRequired[Optional[List[dict]]]
+    best_practice_violations: NotRequired[Optional[List[dict]]]
+    explanations: NotRequired[Optional[List[dict]]]
+    improvement_suggestions: NotRequired[Optional[List[dict]]]
+    learning_resources: NotRequired[Optional[List[str]]]
+    severity_level: NotRequired[Optional[str]]
+    requires_human_review: NotRequired[bool]
+    analysis_complete: NotRequired[bool]
+    processing_time: NotRequired[float]
