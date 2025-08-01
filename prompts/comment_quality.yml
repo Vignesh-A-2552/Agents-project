@@ -1,0 +1,31 @@
+name: "Comment Quality"
+description: "Evaluates the quality and completeness of code documentation"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code"
+    description: "Source code to analyze"
+    required: true
+output_format:
+  type: "json"
+  schema:
+    issues:
+      - line: "integer"
+        issue: "string"
+        suggestion: "string"
+template: |
+  You are a code documentation expert. Evaluate the comment quality in this {language} code.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Return your response as a valid JSON object in this exact format:
+  {{"issues": [{{"line": <int>, "issue": "<string>", "suggestion": "<string>"}}]}}
+
+  If no comment issues are found, return: {{"issues": []}}
+
+  JSON Response:

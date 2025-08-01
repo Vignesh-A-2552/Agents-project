@@ -1,0 +1,42 @@
+name: "Educational Explanations"
+description: "Provides educational explanations and improvement suggestions based on code review findings"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code"
+    description: "Source code snippet for context"
+    required: true
+  - name: "issues"
+    description: "JSON string of issues found during code review"
+    required: true
+output_format:
+  type: "json"
+  schema:
+    explanations:
+      - topic: "string"
+        explanation: "string"
+    suggestions:
+      - priority: "string"
+        suggestion: "string"
+        rationale: "string"
+    resources:
+      - "string"
+template: |
+  You are a code education expert. Based on the code review findings, provide educational explanations and improvement suggestions.
+
+  Language: {language}
+  Code: {code}
+  Issues found: {issues}
+
+  Return your response as a valid JSON object in this exact format:
+  {{
+      "explanations": [{{"topic": "<string>", "explanation": "<string>"}}],
+      "suggestions": [{{"priority": "<string>", "suggestion": "<string>", "rationale": "<string>"}}],
+      "resources": ["<string>"]
+  }}
+
+  If no explanations needed, return: {{"explanations": [], "suggestions": [], "resources": []}}
+
+  JSON Response:

@@ -37,11 +37,13 @@ MANIFEST
 .env.*.local
 
 # IDE
-.vscode/
 .idea/
 .claude/
 *.swp
 *.swo
+
+# VSCode (keep for development)
+# .vscode/
 
 # OS
 .DS_Store

@@ -1,0 +1,32 @@
+name: "Security Scan"
+description: "Performs security vulnerability analysis on source code"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code"
+    description: "Source code to analyze"
+    required: true
+output_format:
+  type: "json"
+  schema:
+    issues:
+      - line: "integer"
+        vulnerability: "string"
+        severity: "string"
+        recommendation: "string"
+template: |
+  You are a security expert. Perform a security scan on the following {language} code.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Return your response as a valid JSON object in this exact format:
+  {{"issues": [{{"line": <int>, "vulnerability": "<string>", "severity": "<string>", "recommendation": "<string>"}}]}}
+
+  If no security issues are found, return: {{"issues": []}}
+
+  JSON Response:

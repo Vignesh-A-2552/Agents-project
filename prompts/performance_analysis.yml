@@ -1,0 +1,41 @@
+name: "Performance Analysis"
+description: "Analyzes code for performance bottlenecks and optimization opportunities"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code"
+    description: "Source code to analyze"
+    required: true
+  - name: "aspect"
+    description: "Specific performance aspect to focus on"
+    required: true
+    examples:
+      - "time complexity"
+      - "memory usage"
+      - "query optimization"
+      - "loop efficiency"
+      - "resource management"
+output_format:
+  type: "json"
+  schema:
+    issues:
+      - line: "integer"
+        issue: "string"
+        impact: "string"
+        solution: "string"
+template: |
+  You are a performance optimization expert. Analyze this {language} code for performance issues related to {aspect}.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Return your response as a valid JSON object in this exact format:
+  {{"issues": [{{"line": <int>, "issue": "<string>", "impact": "<string>", "solution": "<string>"}}]}}
+
+  If no performance issues are found, return: {{"issues": []}}
+
+  JSON Response:

@@ -1,0 +1,31 @@
+name: "Syntax Analysis"
+description: "Analyzes code for syntax errors and language-specific issues"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code" 
+    description: "Source code to analyze"
+    required: true
+output_format:
+  type: "json"
+  schema:
+    errors:
+      - line: "integer"
+        error: "string"
+        severity: "string"
+template: |
+  You are a code analysis expert. Analyze the following {language} code for syntax errors.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Return your response as a valid JSON object in this exact format:
+  {{"errors": [{{"line": <int>, "error": "<string>", "severity": "<string>"}}]}}
+
+  If no syntax errors are found, return: {{"errors": []}}
+
+  JSON Response:

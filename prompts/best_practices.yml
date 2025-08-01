@@ -1,0 +1,32 @@
+name: "Best Practices"
+description: "Checks code for adherence to software engineering best practices"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code"
+    description: "Source code to analyze"
+    required: true
+output_format:
+  type: "json"
+  schema:
+    violations:
+      - line: "integer"
+        violation: "string"
+        principle: "string"
+        improvement: "string"
+template: |
+  You are a software engineering expert. Check the following {language} code for violations of best practices.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Return your response as a valid JSON object in this exact format:
+  {{"violations": [{{"line": <int>, "violation": "<string>", "principle": "<string>", "improvement": "<string>"}}]}}
+
+  If no best practice violations are found, return: {{"violations": []}}
+
+  JSON Response:

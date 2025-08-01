@@ -1,0 +1,31 @@
+name: "Style Check"
+description: "Checks code for style violations and formatting issues"
+version: "1.0"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+  - name: "code"
+    description: "Source code to analyze"
+    required: true
+output_format:
+  type: "json"
+  schema:
+    style_violations:
+      - line: "integer"
+        violation: "string"
+        suggestion: "string"
+template: |
+  You are a code style expert. Check the following {language} code for style violations.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Return your response as a valid JSON object in this exact format:
+  {{"style_violations": [{{"line": <int>, "violation": "<string>", "suggestion": "<string>"}}]}}
+
+  If no style violations are found, return: {{"style_violations": []}}
+
+  JSON Response:
