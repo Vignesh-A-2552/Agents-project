@@ -7,3 +7,5 @@ langchain-openai
 langgraph
 PyYAML
 loguru
+PyJWT
+typing-extensions

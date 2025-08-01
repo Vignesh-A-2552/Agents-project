@@ -1,31 +1,61 @@
 name: "Comment Quality"
 description: "Evaluates the quality and completeness of code documentation"
-version: "1.0"
+version: "1.1"
 input_parameters:
   - name: "language"
     description: "Programming language of the code"
     required: true
+    examples:
+      - "python"
+      - "javascript"
+      - "java"
+      - "c++"
+      - "go"
   - name: "code"
     description: "Source code to analyze"
     required: true
+  - name: "doc_standard"
+    description: "Documentation standard to follow"
+    required: false
+    examples:
+      - "JSDoc"
+      - "Sphinx"
+      - "Javadoc"
+      - "Doxygen"
 output_format:
   type: "json"
   schema:
     issues:
       - line: "integer"
+        issue_type: "string"
         issue: "string"
+        severity: "string"
         suggestion: "string"
+        example: "string"
 template: |
-  You are a code documentation expert. Evaluate the comment quality in this {language} code.
+  You are an expert code documentation analyzer. Evaluate the quality, completeness, and effectiveness of comments and documentation in this {language} code.
 
   Code to analyze:
   ```{language}
   {code}
   ```
 
-  Return your response as a valid JSON object in this exact format:
-  {{"issues": [{{"line": <int>, "issue": "<string>", "suggestion": "<string>"}}]}}
+  Instructions:
+  - Check for missing function/method documentation
+  - Evaluate comment clarity and usefulness
+  - Look for outdated or misleading comments
+  - Check for complex code sections lacking explanation
+  - Verify parameter and return value documentation
+  - Look for TODO/FIXME comments that need attention
+  - Check for proper header/license comments
+  - Follow {doc_standard} format if specified
 
-  If no comment issues are found, return: {{"issues": []}}
+  Issue types: "missing", "unclear", "outdated", "redundant", "incomplete", "format"
+  Severity levels: "error", "warning", "info"
+
+  Return your response as a valid JSON object in this exact format:
+  {{ "issues": [{{ "line": <int>, "issue_type": "<type>", "issue": "<description>", "severity": "<level>", "suggestion": "<improvement>", "example": "<sample_doc>" }}] }}
+
+  If no comment issues are found, return: {{ "issues": [] }}
 
   JSON Response:

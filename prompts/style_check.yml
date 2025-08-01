@@ -1,31 +1,62 @@
 name: "Style Check"
 description: "Checks code for style violations and formatting issues"
-version: "1.0"
+version: "1.1"
 input_parameters:
   - name: "language"
     description: "Programming language of the code"
     required: true
+    examples:
+      - "python"
+      - "javascript"
+      - "java"
+      - "c++"
+      - "go"
   - name: "code"
     description: "Source code to analyze"
     required: true
+  - name: "style_guide"
+    description: "Specific style guide to follow"
+    required: false
+    examples:
+      - "PEP 8"
+      - "Google Style Guide"
+      - "Airbnb Style Guide"
+      - "Standard JS"
 output_format:
   type: "json"
   schema:
     style_violations:
       - line: "integer"
+        column: "integer"
         violation: "string"
+        category: "string"
+        severity: "string"
         suggestion: "string"
+        rule: "string"
 template: |
-  You are a code style expert. Check the following {language} code for style violations.
+  You are an expert code style analyzer. Check the following {language} code for style violations and formatting issues.
 
   Code to analyze:
   ```{language}
   {code}
   ```
 
-  Return your response as a valid JSON object in this exact format:
-  {{"style_violations": [{{"line": <int>, "violation": "<string>", "suggestion": "<string>"}}]}}
+  Instructions:
+  - Check naming conventions (variables, functions, classes)
+  - Verify indentation and whitespace consistency
+  - Look for line length violations
+  - Check bracket placement and spacing
+  - Verify import/include organization
+  - Check for consistent quote usage
+  - Look for trailing whitespace or unnecessary blank lines
+  - Apply {style_guide} standards if specified
 
-  If no style violations are found, return: {{"style_violations": []}}
+  Categories: "naming", "spacing", "formatting", "organization", "consistency"
+  Severity levels: "error", "warning", "info"
+
+  Return your response as a valid JSON object in this exact format:
+  {{ "style_violations": [{{ "line": <int>, "column": <int>, "violation": "<description>", "category": "<type>", "severity": "<level>", "suggestion": "<fix>", "rule": "<rule_name>" }}] }}
+
+  If no style violations are found, return: {{ "style_violations": [] }}
 
   JSON Response:
