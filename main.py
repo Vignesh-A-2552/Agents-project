@@ -3,11 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from config.settings import settings
-from config.logging import setup_logging
 from config.container import Container
-
-# Initialize logging first
-setup_logging()
 
 # Initialize dependency injection container
 container = Container()
