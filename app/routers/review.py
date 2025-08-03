@@ -4,7 +4,8 @@ from fastapi import HTTPException, APIRouter, Request, Depends
 from loguru import logger
 from models.schemas import CodeReviewRequest, CodeReviewResponse
 from models.types import CodeReviewState
-from services.code_review_service import CodeReviewService
+from config.container import Container
+from dependency_injector.wiring import inject, Provide
 
 router = APIRouter(prefix="/api/v1/review", tags=["Code Review"])
 
@@ -12,7 +13,10 @@ router = APIRouter(prefix="/api/v1/review", tags=["Code Review"])
 code_review_graph = None
 
 
-async def get_code_review_service():
+@inject
+async def get_code_review_service(
+    code_review_service=Provide[Container.code_review_service]
+):
     """Dependency to get code review service."""
     global code_review_graph
     if code_review_graph is None:
@@ -21,12 +25,15 @@ async def get_code_review_service():
 
 
 @router.on_event("startup")
-async def initialize_review_system():
+@inject
+async def initialize_review_system(
+    code_review_service=Provide[Container.code_review_service]
+):
     """Initialize the code review system on startup."""
     global code_review_graph
     try:
         logger.info("Initializing Code Review System...")
-        service = CodeReviewService()
+        service = code_review_service
         code_review_graph = await service.build_agent()
         logger.success("Code Review System initialized successfully!")
     except Exception as e:

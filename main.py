@@ -11,10 +11,12 @@ setup_logging()
 
 # Initialize dependency injection container
 container = Container()
-container.wire(modules=["app.dependencies"])
 
-# Import router after wiring
+# Import router
 from app.api import router
+
+# Wire the container with all modules that use injection
+container.wire(modules=["app.routers.auth", "app.routers.review"])
 
 app = FastAPI(
     title=settings.APP_TITLE,

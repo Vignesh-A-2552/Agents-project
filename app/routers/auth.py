@@ -1,17 +1,13 @@
 from datetime import datetime
 from typing import Dict, Any
-from fastapi import HTTPException, APIRouter, Request, status
+from fastapi import HTTPException, APIRouter, Request, status, Depends
 from loguru import logger
 from models.schemas import LoginRequest, LoginResponse, UserCreateRequest, SignupResponse
-from services.auth_service import AuthService
-from Infrastructure.client.AuthRepository import AuthRepository
-from config.settings import settings
+from config.container import Container
+from dependency_injector.wiring import inject, Provide
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
-
-# Initialize auth service
-# auth_service = AuthService()
 
 
 # login")@router.post("/login", response_model=LoginResponse)
@@ -61,17 +57,17 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
 @router.post("/signup", status_code=status.HTTP_200_OK, response_model=SignupResponse)
-def signup(request: UserCreateRequest) -> SignupResponse:
+@inject
+def signup(
+    request: UserCreateRequest,
+    auth_service=Provide[Container.auth_service]
+) -> SignupResponse:
     """ Create a new user account.
     """
     try:
         logger.info(f"REQUEST /auth/signup - Email: {request.email}, Username: {request.username}")
         
-        # Create auth service instance
-        auth_repo = AuthRepository(settings.DATABASE_URL)
-        auth_service = AuthService(auth_repo)
-        
-        # Create new user
+        # Create new user using injected service
         user_id = auth_service.create_user(request.email, request.username, request.password)
         
         if not user_id:

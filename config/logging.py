@@ -33,12 +33,13 @@ def setup_logging():
         "logs/app.log",
         level="DEBUG",
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        rotation="1 day",
+        rotation="50 MB",  # Size-based rotation for Windows compatibility
         retention="30 days",
         compression="zip",
         backtrace=True,
         diagnose=True,
-        enqueue=True  # Use a separate thread for writing to avoid conflicts
+        enqueue=True,  # Use a separate thread for writing to avoid conflicts
+        serialize=False
     )
     
     # Add separate error log file
@@ -46,12 +47,13 @@ def setup_logging():
         "logs/error.log",
         level="ERROR",
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        rotation="1 week",
+        rotation="20 MB",  # Size-based rotation for Windows compatibility
         retention="90 days",
         compression="zip",
         backtrace=True,
         diagnose=True,
-        enqueue=True  # Use a separate thread for writing to avoid conflicts
+        enqueue=True,  # Use a separate thread for writing to avoid conflicts
+        serialize=False
     )
     
     # Add request/response log file
@@ -59,12 +61,13 @@ def setup_logging():
         "logs/requests.log",
         level="INFO",
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}",
-        rotation="1 day",
+        rotation="100 MB",  # Size-based rotation instead of time-based to avoid Windows issues
         retention="7 days",
         filter=lambda record: "REQUEST" in record["message"] or "RESPONSE" in record["message"],
         backtrace=False,
         diagnose=False,
-        enqueue=True  # Use a separate thread for writing to avoid conflicts
+        enqueue=True,  # Use a separate thread for writing to avoid conflicts
+        serialize=False  # Disable serialization for better Windows compatibility
     )
     
     # Add error handler for uncaught exceptions
