@@ -7,3 +7,9 @@ langchain-openai
 langgraph
 PyYAML
 loguru
+PyJWT
+typing-extensions
+dependency-injector
+bcrypt
+psycopg2-binary
+python-multipart

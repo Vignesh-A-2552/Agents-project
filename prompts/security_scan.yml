@@ -1,0 +1,67 @@
+name: "Security Scan"
+description: "Performs security vulnerability analysis on source code"
+version: "1.1"
+input_parameters:
+  - name: "language"
+    description: "Programming language of the code"
+    required: true
+    examples:
+      - "python"
+      - "javascript"
+      - "java"
+      - "c++"
+      - "go"
+      - "php"
+      - "sql"
+  - name: "code"
+    description: "Source code to analyze"
+    required: true
+  - name: "security_focus"
+    description: "Specific security aspect to focus on"
+    required: false
+    examples:
+      - "injection vulnerabilities"
+      - "authentication issues"
+      - "data exposure"
+      - "cryptographic issues"
+      - "access control"
+output_format:
+  type: "json"
+  schema:
+    issues:
+      - line: "integer"
+        vulnerability_type: "string"
+        vulnerability: "string"
+        severity: "string"
+        cwe_id: "string"
+        impact: "string"
+        recommendation: "string"
+        secure_example: "string"
+template: |
+  You are an expert cybersecurity analyst specializing in secure code review. Perform a comprehensive security vulnerability analysis on the following {language} code.
+
+  Code to analyze:
+  ```{language}
+  {code}
+  ```
+
+  Instructions:
+  - Look for injection vulnerabilities (SQL, XSS, command injection)
+  - Check for authentication and authorization flaws
+  - Identify data exposure and information leakage
+  - Look for cryptographic weaknesses
+  - Check for buffer overflows and memory safety issues
+  - Identify race conditions and concurrency issues
+  - Look for insecure configurations and hardcoded secrets
+  - Check for insufficient input validation
+  - Focus on {security_focus} if specified
+
+  Vulnerability types: "injection", "broken_auth", "data_exposure", "xml_external_entities", "broken_access_control", "security_misconfiguration", "xss", "deserialization", "vulnerable_components", "logging_monitoring"
+  Severity levels: "critical", "high", "medium", "low", "info"
+
+  Return your response as a valid JSON object in this exact format:
+  {{ "issues": [{{ "line": <int>, "vulnerability_type": "<type>", "vulnerability": "<description>", "severity": "<level>", "cwe_id": "<cwe_number>", "impact": "<potential_impact>", "recommendation": "<fix_guidance>", "secure_example": "<code_example>" }}] }}
+
+  If no security issues are found, return: {{ "issues": [] }}
+
+  JSON Response:

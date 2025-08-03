@@ -46,3 +46,28 @@ class HealthResponse(BaseModel):
     status: str
     timestamp: str
     version: str = "1.0.0"
+
+
+class LoginRequest(BaseModel):
+    """Login request model."""
+    email: str = Field(..., description="User email", min_length=5, max_length=100)
+    password: str = Field(..., description="User password", min_length=6, max_length=100)
+
+
+class LoginResponse(BaseModel):
+    """Login response model."""
+    access_token: str = Field(..., description="JWT access token")
+    refresh_token: str = Field(..., description="JWT refresh token")
+    token_type: str = Field(default="bearer", description="Token type")
+    expires_in: int = Field(..., description="Token expiration time in seconds")
+
+class UserCreateRequest(BaseModel):
+    email: str = Field(..., description="User email", min_length=5, max_length=100)
+    username: str = Field(..., description="Username", min_length=3, max_length=50)
+    password: str = Field(..., description="User password", min_length=6, max_length=100)
+
+
+class SignupResponse(BaseModel):
+    """Signup response model."""
+    message: str = Field(..., description="Success message")
+    user_id: str = Field(..., description="Created user ID")

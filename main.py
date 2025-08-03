@@ -3,11 +3,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from config.settings import settings
-from config.logging import setup_logging
+from config.container import Container
+
+# Initialize dependency injection container
+container = Container()
+
+# Import router
 from app.api import router
 
-# Initialize logging first
-setup_logging()
+# Wire the container with all modules that use injection
+container.wire(modules=["app.routers.auth", "app.routers.review"])
 
 app = FastAPI(
     title=settings.APP_TITLE,

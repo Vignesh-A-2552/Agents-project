@@ -1,123 +1,78 @@
+import yaml
+from pathlib import Path
 from langchain.prompts import PromptTemplate
+from loguru import logger
 
 
 class PromptService:
     def __init__(self):
+        self.prompts_dir = Path("prompts")
         self._setup_prompts()
     
+    def _load_prompt_template(self, filename: str) -> PromptTemplate:
+        """Load a prompt template from a YAML file."""
+        try:
+            prompt_file = self.prompts_dir / filename
+            if not prompt_file.exists():
+                logger.error(f"Prompt file not found: {prompt_file}")
+                raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
+            
+            with open(prompt_file, 'r', encoding='utf-8') as f:
+                prompt_data = yaml.safe_load(f)
+            
+            # Validate required fields
+            if 'template' not in prompt_data:
+                raise ValueError(f"Missing 'template' field in {filename}")
+            
+            # Log prompt metadata
+            prompt_name = prompt_data.get('name', 'Unknown')
+            prompt_version = prompt_data.get('version', '1.0')
+            logger.debug(f"Loaded prompt '{prompt_name}' v{prompt_version} from {filename}")
+            
+            # Extract and return the template
+            template_content = prompt_data['template'].strip()
+            return PromptTemplate.from_template(template_content)
+            
+        except yaml.YAMLError as e:
+            logger.error(f"YAML parsing error in {filename}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error loading prompt template from {filename}: {e}")
+            raise
+    
+    def get_prompt_metadata(self, filename: str) -> dict:
+        """Get metadata for a prompt file."""
+        try:
+            prompt_file = self.prompts_dir / filename
+            with open(prompt_file, 'r', encoding='utf-8') as f:
+                prompt_data = yaml.safe_load(f)
+            
+            return {
+                'name': prompt_data.get('name', 'Unknown'),
+                'description': prompt_data.get('description', ''),
+                'version': prompt_data.get('version', '1.0'),
+                'input_parameters': prompt_data.get('input_parameters', []),
+                'output_format': prompt_data.get('output_format', {})
+            }
+        except Exception as e:
+            logger.error(f"Error getting metadata from {filename}: {e}")
+            return {}
+    
     def _setup_prompts(self):
-        """Initialize all prompt templates."""
-        self.syntax_prompt = PromptTemplate.from_template(
-            """You are a code analysis expert. Analyze the following {language} code for syntax errors.
-
-Code to analyze:
-```{language}
-{code}
-```
-
-Return your response as a valid JSON object in this exact format:
-{{"errors": [{{"line": <int>, "error": "<string>", "severity": "<string>"}}]}}
-
-If no syntax errors are found, return: {{"errors": []}}
-
-JSON Response:"""
-        )
-
-        self.format_prompt = PromptTemplate.from_template(
-            """You are a code style expert. Check the following {language} code for style violations.
-
-Code to analyze:
-```{language}
-{code}
-```
-
-Return your response as a valid JSON object in this exact format:
-{{"style_violations": [{{"line": <int>, "violation": "<string>", "suggestion": "<string>"}}]}}
-
-If no style violations are found, return: {{"style_violations": []}}
-
-JSON Response:"""
-        )
-
-        self.comment_quality_prompt = PromptTemplate.from_template(
-            """You are a code documentation expert. Evaluate the comment quality in this {language} code.
-
-Code to analyze:
-```{language}
-{code}
-```
-
-Return your response as a valid JSON object in this exact format:
-{{"issues": [{{"line": <int>, "issue": "<string>", "suggestion": "<string>"}}]}}
-
-If no comment issues are found, return: {{"issues": []}}
-
-JSON Response:"""
-        )
-
-        self.security_scan_prompt = PromptTemplate.from_template(
-            """You are a security expert. Perform a security scan on the following {language} code.
-
-Code to analyze:
-```{language}
-{code}
-```
-
-Return your response as a valid JSON object in this exact format:
-{{"issues": [{{"line": <int>, "vulnerability": "<string>", "severity": "<string>", "recommendation": "<string>"}}]}}
-
-If no security issues are found, return: {{"issues": []}}
-
-JSON Response:"""
-        )
-
-        self.performance_prompt = PromptTemplate.from_template(
-            """You are a performance optimization expert. Analyze this {language} code for performance issues related to {aspect}.
-
-Code to analyze:
-```{language}
-{code}
-```
-
-Return your response as a valid JSON object in this exact format:
-{{"issues": [{{"line": <int>, "issue": "<string>", "impact": "<string>", "solution": "<string>"}}]}}
-
-If no performance issues are found, return: {{"issues": []}}
-
-JSON Response:"""
-        )
-
-        self.best_practices_prompt = PromptTemplate.from_template(
-            """You are a software engineering expert. Check the following {language} code for violations of best practices.
-
-Code to analyze:
-```{language}
-{code}
-```
-
-Return your response as a valid JSON object in this exact format:
-{{"violations": [{{"line": <int>, "violation": "<string>", "principle": "<string>", "improvement": "<string>"}}]}}
-
-If no best practice violations are found, return: {{"violations": []}}
-
-JSON Response:"""
-        )
-
-        self.explanation_prompt = PromptTemplate.from_template(
-            """You are a code education expert. Based on the code review findings, provide educational explanations and improvement suggestions.
-
-Language: {language}
-Code: {code}
-Issues found: {issues}
-
-Return your response as a valid JSON object in this exact format:
-{{
-    "explanations": [{{"topic": "<string>", "explanation": "<string>"}}],
-    "suggestions": [{{"priority": "<string>", "suggestion": "<string>", "rationale": "<string>"}}],
-    "resources": ["<string>"]
-}}
-
-If no explanations needed, return: {{"explanations": [], "suggestions": [], "resources": []}}
-
-JSON Response:"""
-        )
+        """Initialize all prompt templates from YAML files."""
+        logger.info("Loading prompt templates from YAML files")
+        
+        try:
+            self.syntax_prompt = self._load_prompt_template("syntax_analysis.yml")
+            self.format_prompt = self._load_prompt_template("style_check.yml")
+            self.comment_quality_prompt = self._load_prompt_template("comment_quality.yml")
+            self.security_scan_prompt = self._load_prompt_template("security_scan.yml")
+            self.performance_prompt = self._load_prompt_template("performance_analysis.yml")
+            self.best_practices_prompt = self._load_prompt_template("best_practices.yml")
+            self.explanation_prompt = self._load_prompt_template("explanations.yml")
+            
+            logger.success("All prompt templates loaded successfully from YAML files")
+            
+        except Exception as e:
+            logger.critical(f"Failed to load prompt templates: {e}")
+            raise

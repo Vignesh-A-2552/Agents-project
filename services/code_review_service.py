@@ -8,11 +8,11 @@ from .llm_service import LLMService
 from .prompt_service import PromptService
 
 
-class CodeReviewService(LLMService, PromptService):
-    def __init__(self):
+class CodeReviewService:
+    def __init__(self, llm_service: LLMService = None, prompt_service: PromptService = None):
         logger.info("Initializing Code Review Service")
-        LLMService.__init__(self)
-        PromptService.__init__(self)
+        self.llm_service = llm_service or LLMService()
+        self.prompt_service = prompt_service or PromptService()
         logger.success("Code Review Service initialized successfully")
 
     async def parse_code_input(self, state: CodeReviewState) -> CodeReviewState:
@@ -44,27 +44,27 @@ class CodeReviewService(LLMService, PromptService):
         logger.info("Starting syntax and style analysis")
         try:
             # Syntax analysis
-            syntax_prompt_str = self.syntax_prompt.format(language=state["language"], code=state["code"])
-            syntax_response = await self.model.ainvoke(syntax_prompt_str)
+            syntax_prompt_str = self.prompt_service.syntax_prompt.format(language=state["language"], code=state["code"])
+            syntax_response = await self.llm_service.model.ainvoke(syntax_prompt_str)
             
             syntax_content = syntax_response if hasattr(syntax_response, 'content') else str(syntax_response)
-            syntax_result = self.extract_json_from_response(syntax_content)
+            syntax_result = self.llm_service.extract_json_from_response(syntax_content)
             state["syntax_issues"] = syntax_result.get("errors", [])
 
             # Style analysis
-            format_prompt_str = self.format_prompt.format(language=state["language"], code=state["code"])
-            format_response = await self.model.ainvoke(format_prompt_str)
+            format_prompt_str = self.prompt_service.format_prompt.format(language=state["language"], code=state["code"])
+            format_response = await self.llm_service.model.ainvoke(format_prompt_str)
             
             format_content = format_response if hasattr(format_response, 'content') else str(format_response)
-            format_result = self.extract_json_from_response(format_content)
+            format_result = self.llm_service.extract_json_from_response(format_content)
             state["style_violations"] = format_result.get("style_violations", [])
 
             # Comment quality analysis
-            comment_prompt_str = self.comment_quality_prompt.format(language=state["language"], code=state["code"])
-            comment_response = await self.model.ainvoke(comment_prompt_str)
+            comment_prompt_str = self.prompt_service.comment_quality_prompt.format(language=state["language"], code=state["code"])
+            comment_response = await self.llm_service.model.ainvoke(comment_prompt_str)
             
             comment_content = comment_response if hasattr(comment_response, 'content') else str(comment_response)
-            comment_result = self.extract_json_from_response(comment_content)
+            comment_result = self.llm_service.extract_json_from_response(comment_content)
             
             if state.get("style_violations") is None:
                 state["style_violations"] = []
@@ -80,11 +80,11 @@ class CodeReviewService(LLMService, PromptService):
     async def security_scan(self, state: CodeReviewState) -> CodeReviewState:
         logger.info("Starting security vulnerability scan")
         try:
-            prompt_str = self.security_scan_prompt.format(language=state["language"], code=state["code"])
-            response = await self.model.ainvoke(prompt_str)
+            prompt_str = self.prompt_service.security_scan_prompt.format(language=state["language"], code=state["code"])
+            response = await self.llm_service.model.ainvoke(prompt_str)
             
             content = response if hasattr(response, 'content') else str(response)
-            result = self.extract_json_from_response(content)
+            result = self.llm_service.extract_json_from_response(content)
             state["security_vulnerabilities"] = result.get("issues", [])
             
         except Exception as e:
@@ -102,15 +102,15 @@ class CodeReviewService(LLMService, PromptService):
             
             for aspect in aspects:
                 try:
-                    prompt_str = self.performance_prompt.format(
+                    prompt_str = self.prompt_service.performance_prompt.format(
                         language=state["language"], 
                         code=state["code"], 
                         aspect=aspect
                     )
-                    response = await self.model.ainvoke(prompt_str)
+                    response = await self.llm_service.model.ainvoke(prompt_str)
                     
                     content = response if hasattr(response, 'content') else str(response)
-                    result = self.extract_json_from_response(content)
+                    result = self.llm_service.extract_json_from_response(content)
                     
                     issues = result.get("issues", [])
                     state["performance_issues"].extend(issues)
@@ -128,11 +128,11 @@ class CodeReviewService(LLMService, PromptService):
     async def best_practices_check(self, state: CodeReviewState) -> CodeReviewState:
         logger.info("Starting best practices check")
         try:
-            prompt_str = self.best_practices_prompt.format(language=state["language"], code=state["code"])
-            response = await self.model.ainvoke(prompt_str)
+            prompt_str = self.prompt_service.best_practices_prompt.format(language=state["language"], code=state["code"])
+            response = await self.llm_service.model.ainvoke(prompt_str)
             
             content = response if hasattr(response, 'content') else str(response)
-            result = self.extract_json_from_response(content)
+            result = self.llm_service.extract_json_from_response(content)
             state["best_practice_violations"] = result.get("violations", [])
             
         except Exception as e:
@@ -170,15 +170,15 @@ class CodeReviewService(LLMService, PromptService):
                 "best_practices": state.get("best_practice_violations", [])
             })
 
-            prompt_str = self.explanation_prompt.format(
+            prompt_str = self.prompt_service.explanation_prompt.format(
                 language=state["language"],
                 code=state["code"][:500],
                 issues=issues
             )
 
-            response = await self.model.ainvoke(prompt_str)
+            response = await self.llm_service.model.ainvoke(prompt_str)
             content = response if hasattr(response, 'content') else str(response)
-            result = self.extract_json_from_response(content)
+            result = self.llm_service.extract_json_from_response(content)
             
             state["explanations"] = result.get("explanations", [])
             state["improvement_suggestions"] = result.get("suggestions", [])
