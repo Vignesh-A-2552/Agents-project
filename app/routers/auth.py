@@ -1,11 +1,7 @@
-from datetime import datetime
-from typing import Dict, Any
-from fastapi import HTTPException, APIRouter, Request, status, Depends
+from fastapi import HTTPException, APIRouter, status, Depends
 from loguru import logger
 from models.schemas import LoginRequest, LoginResponse, UserCreateRequest, SignupResponse
-from config.container import Container
 from ..dependencies import get_auth_service
-from services.auth_service import AuthService
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -35,3 +31,34 @@ def signup(
     except Exception as e:
         logger.error(f"Error during signup: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error during signup")
+
+@router.post("/login", status_code=status.HTTP_200_OK, response_model=LoginResponse)
+def login(
+    request: LoginRequest,
+    auth_service = Depends(get_auth_service)
+) -> LoginResponse:
+    """ Authenticate user and return access and refresh tokens.
+    """
+    try:
+        logger.info(f"REQUEST /auth/login - Email: {request.email}")
+        
+        # Authenticate user using injected service
+        auth_result = auth_service.authenticate_user(request.email, request.password)
+        
+        if not auth_result:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        logger.info(f"RESPONSE /auth/login: User {request.email} logged in successfully")
+        return LoginResponse(
+            access_token=auth_result['access_token'],
+            refresh_token=auth_result['refresh_token'],
+            token_type=auth_result['token_type'],
+            expires_in=auth_result['expires_in']
+        )
+        
+    except HTTPException:
+        logger.error(f"HTTPException during login: {request}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Error during login: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error during login")

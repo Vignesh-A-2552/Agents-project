@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import HTTPException, APIRouter, Request
+from fastapi import APIRouter, Request
 from loguru import logger
 from models.schemas import HealthResponse
 from config.settings import settings

@@ -1,7 +1,8 @@
+import logging
+from typing import Any, Dict, List, Optional, Tuple
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from typing import Any, Dict, List, Optional, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 

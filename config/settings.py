@@ -25,6 +25,11 @@ class Settings:
     RELOAD = True
     LOG_LEVEL = "info"
 
+    # JWT Configuration
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "24"))
+
     
     # OpenAI Configuration - Use properties to get fresh values
     @property
@@ -35,23 +40,10 @@ class Settings:
     def MODEL(self):
         return os.getenv("MODEL")
     
-    # Authentication Configuration
-    @property
-    def JWT_SECRET_KEY(self):
-        return os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
-    
-    @property
-    def JWT_ALGORITHM(self):
-        return os.getenv("JWT_ALGORITHM", "HS256")
-    
-    @property
-    def JWT_EXPIRATION_HOURS(self):
-        return int(os.getenv("JWT_EXPIRATION_HOURS", "24"))
-    
-    # Database Configuration (for user storage)
     @property
     def DATABASE_URL(self):
         return os.getenv("DATABASE_URL", "sqlite:///./users.db")
+    
     
     # Code Review Settings
     MAX_CODE_LENGTH = 50000
@@ -88,28 +80,7 @@ class Settings:
             raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
         return True
     
-    @classmethod
-    def get_debug_info(cls):
-        """Get debugging information about the configuration."""
-        instance = cls() if not hasattr(cls, '_instance') else cls._instance
-        return {
-            "python_version": sys.version,
-            "python_executable": sys.executable,
-            "working_directory": str(Path.cwd()),
-            "env_file_exists": Path(".env").exists(),
-            "openai_api_key_set": bool(instance.OPENAI_API_KEY),
-            "model_set": bool(instance.MODEL),
-            "jwt_secret_key_set": bool(instance.JWT_SECRET_KEY),
-            "jwt_algorithm": instance.JWT_ALGORITHM,
-            "jwt_expiration_hours": instance.JWT_EXPIRATION_HOURS,
-            "database_url_set": bool(instance.DATABASE_URL),
-            "supported_languages": cls.SUPPORTED_LANGUAGES,
-            "max_code_length": cls.MAX_CODE_LENGTH,
-            "host": cls.HOST,
-            "port": cls.PORT,
-            "reload": cls.RELOAD,
-            "log_level": cls.LOG_LEVEL
-        }
+   
 
 
 settings = Settings()

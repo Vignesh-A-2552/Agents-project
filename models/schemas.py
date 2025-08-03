@@ -1,6 +1,5 @@
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
 
 
 class CodeReviewRequest(BaseModel):
@@ -51,26 +50,16 @@ class HealthResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     """Login request model."""
-    username: str = Field(..., description="Username or email", min_length=3, max_length=100)
+    email: str = Field(..., description="User email", min_length=5, max_length=100)
     password: str = Field(..., description="User password", min_length=6, max_length=100)
 
 
 class LoginResponse(BaseModel):
     """Login response model."""
     access_token: str = Field(..., description="JWT access token")
+    refresh_token: str = Field(..., description="JWT refresh token")
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(..., description="Token expiration time in seconds")
-    user_info: Dict[str, Any] = Field(..., description="User information")
-
-
-class UserInfo(BaseModel):
-    """User information model."""
-    user_id: str
-    username: str
-    email: Optional[str] = None
-    role: str = Field(default="user", description="User role")
-    created_at: datetime
-    last_login: Optional[datetime] = None
 
 class UserCreateRequest(BaseModel):
     email: str = Field(..., description="User email", min_length=5, max_length=100)
