@@ -4,8 +4,8 @@ from config.container import Container
 
 @inject
 def get_auth_service(
-    auth_service: AuthService = Provide[Container.auth_service]
-) -> AuthService:
+    auth_service = Provide[Container.auth_service]
+):
     """Dependency injection for AuthService."""
     return auth_service
 
