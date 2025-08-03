@@ -71,3 +71,14 @@ class UserInfo(BaseModel):
     role: str = Field(default="user", description="User role")
     created_at: datetime
     last_login: Optional[datetime] = None
+
+class UserCreateRequest(BaseModel):
+    email: str = Field(..., description="User email", min_length=5, max_length=100)
+    username: str = Field(..., description="Username", min_length=3, max_length=50)
+    password: str = Field(..., description="User password", min_length=6, max_length=100)
+
+
+class SignupResponse(BaseModel):
+    """Signup response model."""
+    message: str = Field(..., description="Success message")
+    user_id: str = Field(..., description="Created user ID")

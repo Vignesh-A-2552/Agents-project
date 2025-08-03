@@ -5,7 +5,6 @@ from loguru import logger
 from models.schemas import CodeReviewRequest, CodeReviewResponse
 from models.types import CodeReviewState
 from services.code_review_service import CodeReviewService
-from middleware.auth_middleware import get_optional_user
 
 router = APIRouter(prefix="/api/v1/review", tags=["Code Review"])
 
@@ -39,7 +38,7 @@ async def initialize_review_system():
 async def review_code(
     request: CodeReviewRequest, 
     http_request: Request,
-    current_user: Optional[Dict[str, Any]] = Depends(get_optional_user),
+    # current_user: Optional[Dict[str, Any]] = Depends(get_optional_user),
     review_service = Depends(get_code_review_service)
 ):
     """
@@ -53,8 +52,8 @@ async def review_code(
     Authentication is optional but recommended for better tracking.
     """
     client_ip = http_request.client.host if http_request.client else "unknown"
-    user_info = f"User: {current_user.get('username')}" if current_user else "Anonymous"
-    logger.info(f"REQUEST /review/analyze from {client_ip} - {user_info} - Language: {request.language}, Code length: {len(request.code)}")
+    # user_info = f"User: {current_user.get('username')}" if current_user else "Anonymous"
+    # logger.info(f"REQUEST /review/analyze from {client_ip} - {user_info} - Language: {request.language}, Code length: {len(request.code)}")
     
     start_time = datetime.now()
     
@@ -107,11 +106,11 @@ async def review_code(
                 "best_practice_violations": best_practice_count,
                 "code_length": len(request.code),
                 "language": request.language,
-                "analyzed_by": current_user.get("username") if current_user else "anonymous"
+                # "analyzed_by": current_user.get("username") if current_user else "anonymous"
             }
         )
         
-        logger.info(f"RESPONSE /review/analyze: {user_info}, Severity={response.severity_level}, Issues={total_issues}, Processing={processing_time:.3f}s")
+        # logger.info(f"RESPONSE /review/analyze: {user_info}, Severity={response.severity_level}, Issues={total_issues}, Processing={processing_time:.3f}s")
         return response
         
     except ValueError as e:

@@ -4,10 +4,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from config.settings import settings
 from config.logging import setup_logging
-from app.api import router
+from config.container import Container
 
 # Initialize logging first
 setup_logging()
+
+# Initialize dependency injection container
+container = Container()
+container.wire(modules=["app.dependencies"])
+
+# Import router after wiring
+from app.api import router
 
 app = FastAPI(
     title=settings.APP_TITLE,

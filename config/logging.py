@@ -37,7 +37,8 @@ def setup_logging():
         retention="30 days",
         compression="zip",
         backtrace=True,
-        diagnose=True
+        diagnose=True,
+        enqueue=True  # Use a separate thread for writing to avoid conflicts
     )
     
     # Add separate error log file
@@ -49,7 +50,8 @@ def setup_logging():
         retention="90 days",
         compression="zip",
         backtrace=True,
-        diagnose=True
+        diagnose=True,
+        enqueue=True  # Use a separate thread for writing to avoid conflicts
     )
     
     # Add request/response log file
@@ -61,7 +63,8 @@ def setup_logging():
         retention="7 days",
         filter=lambda record: "REQUEST" in record["message"] or "RESPONSE" in record["message"],
         backtrace=False,
-        diagnose=False
+        diagnose=False,
+        enqueue=True  # Use a separate thread for writing to avoid conflicts
     )
     
     # Add error handler for uncaught exceptions

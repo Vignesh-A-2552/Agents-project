@@ -24,6 +24,7 @@ class Settings:
     PORT = 8000
     RELOAD = True
     LOG_LEVEL = "info"
+
     
     # OpenAI Configuration - Use properties to get fresh values
     @property
