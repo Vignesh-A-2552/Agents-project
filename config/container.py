@@ -3,6 +3,7 @@ from services.auth_service import AuthService
 from services.llm_service import LLMService
 from services.prompt_service import PromptService
 from services.code_review_service import CodeReviewService
+from services.chat_service import ChatService
 from Infrastructure.client.AuthRepository import AuthRepository
 from config.settings import settings
 
@@ -33,5 +34,12 @@ class Container(containers.DeclarativeContainer):
     auth_service = providers.Singleton(
         AuthService,
         repo=auth_repository
+    )
+    
+    # Chat Service
+    chat_service = providers.Factory(
+        ChatService,
+        llm_service=llm_service,
+        prompt_service=prompt_service
     )
     

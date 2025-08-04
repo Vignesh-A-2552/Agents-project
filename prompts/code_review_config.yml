@@ -1,0 +1,240 @@
+SYNTAX_ANALYSIS:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert code reviewer specializing in syntax analysis. Your task is to analyze the provided code for syntax errors, potential issues, and structural problems.
+    
+    Please analyze the following code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - Syntax errors and typos
+    - Missing semicolons, brackets, or parentheses
+    - Incorrect indentation
+    - Invalid variable names or reserved keywords
+    - Import/include statement issues
+    
+    Provide your analysis in JSON format:
+    {{
+      "syntax_score": <score_0_to_100>,
+      "issues": [
+        {{
+          "type": "syntax_error|warning|suggestion",
+          "line": <line_number>,
+          "description": "Clear description of the issue",
+          "suggestion": "How to fix this issue"
+        }}
+      ],
+      "summary": "Overall assessment of code syntax quality"
+    }}
+
+STYLE_CHECK:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert code reviewer specializing in code style and formatting. Your task is to analyze the provided code for style consistency, formatting issues, and adherence to best practices.
+    
+    Please analyze the following {language} code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - Code formatting and indentation consistency
+    - Variable and function naming conventions
+    - Line length and spacing
+    - Comment style and placement
+    - Language-specific style guidelines
+    
+    Provide your analysis in JSON format:
+    {{
+      "style_score": <score_0_to_100>,
+      "issues": [
+        {{
+          "type": "formatting|naming|convention|spacing",
+          "line": <line_number>,
+          "description": "Clear description of the style issue",
+          "suggestion": "How to improve the style"
+        }}
+      ],
+      "summary": "Overall assessment of code style quality"
+    }}
+
+COMMENT_QUALITY:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert code reviewer specializing in documentation and comment quality. Your task is to analyze the provided code for comment clarity, completeness, and usefulness.
+    
+    Please analyze the following {language} code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - Presence and quality of function/method documentation
+    - Inline comments for complex logic
+    - Comment clarity and usefulness
+    - Missing documentation for public APIs
+    - Outdated or misleading comments
+    
+    Provide your analysis in JSON format:
+    {{
+      "comment_score": <score_0_to_100>,
+      "issues": [
+        {{
+          "type": "missing|unclear|outdated|excessive",
+          "line": <line_number>,
+          "description": "Clear description of the documentation issue",
+          "suggestion": "How to improve the documentation"
+        }}
+      ],
+      "summary": "Overall assessment of code documentation quality"
+    }}
+
+SECURITY_SCAN:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert security code reviewer. Your task is to analyze the provided code for potential security vulnerabilities, risks, and unsafe practices.
+    
+    Please analyze the following {language} code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - Input validation and sanitization
+    - SQL injection vulnerabilities
+    - Cross-site scripting (XSS) risks
+    - Authentication and authorization issues
+    - Sensitive data exposure
+    - Unsafe operations and functions
+    
+    Provide your analysis in JSON format:
+    {{
+      "security_score": <score_0_to_100>,
+      "vulnerabilities": [
+        {{
+          "severity": "critical|high|medium|low",
+          "type": "injection|xss|auth|exposure|unsafe",
+          "line": <line_number>,
+          "description": "Clear description of the security issue",
+          "recommendation": "How to fix this security vulnerability"
+        }}
+      ],
+      "summary": "Overall security assessment"
+    }}
+
+PERFORMANCE_ANALYSIS:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert performance code reviewer. Your task is to analyze the provided code for performance issues, inefficiencies, and optimization opportunities.
+    
+    Please analyze the following {language} code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - Time complexity analysis
+    - Memory usage patterns
+    - Database query optimization
+    - Loop efficiency and nested operations
+    - Resource management and cleanup
+    - Caching opportunities
+    
+    Provide your analysis in JSON format:
+    {{
+      "performance_score": <score_0_to_100>,
+      "issues": [
+        {{
+          "severity": "critical|high|medium|low",
+          "type": "complexity|memory|database|loops|resources",
+          "line": <line_number>,
+          "description": "Clear description of the performance issue",
+          "optimization": "Specific recommendation for improvement"
+        }}
+      ],
+      "summary": "Overall performance assessment"
+    }}
+
+BEST_PRACTICES:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert code reviewer specializing in software engineering best practices. Your task is to analyze the provided code for adherence to industry standards and best practices.
+    
+    Please analyze the following {language} code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - SOLID principles adherence
+    - DRY (Don't Repeat Yourself) principle
+    - Error handling and exception management
+    - Code organization and modularity
+    - Design patterns usage
+    - Language-specific best practices
+    
+    Provide your analysis in JSON format:
+    {{
+      "best_practices_score": <score_0_to_100>,
+      "issues": [
+        {{
+          "category": "solid|dry|error_handling|organization|patterns",
+          "severity": "critical|high|medium|low",
+          "line": <line_number>,
+          "description": "Clear description of the best practice violation",
+          "recommendation": "How to align with best practices"
+        }}
+      ],
+      "summary": "Overall best practices assessment"
+    }}
+
+EXPLANATIONS:
+  model: gpt-4o-mini
+  temperature: 0.0
+  prompt: |
+    You are an expert code educator specializing in explaining complex code concepts. Your task is to provide clear, educational explanations of the provided code.
+    
+    Please analyze and explain the following {language} code:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Focus on:
+    - High-level purpose and functionality
+    - Key algorithms and logic flow
+    - Important design decisions
+    - Complex or non-obvious parts
+    - Educational insights for developers
+    
+    Provide your explanation in JSON format:
+    {{
+      "explanation": {{
+        "purpose": "What this code does and why it exists",
+        "key_concepts": ["concept1", "concept2", "concept3"],
+        "flow": "Step-by-step explanation of the main logic",
+        "complexity_areas": [
+          {{
+            "line": <line_number>,
+            "concept": "Name of the complex concept",
+            "explanation": "Clear explanation of this complex part"
+          }}
+        ],
+        "learning_points": ["insight1", "insight2", "insight3"]
+      }},
+      "summary": "Overall educational assessment"
+    }}

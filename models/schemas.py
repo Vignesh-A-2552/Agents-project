@@ -71,3 +71,9 @@ class SignupResponse(BaseModel):
     """Signup response model."""
     message: str = Field(..., description="Success message")
     user_id: str = Field(..., description="Created user ID")
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., description="User message", min_length=1, max_length=5000)
+
+class ChatResponse(BaseModel):
+    message: str = Field(..., description="Bot response", min_length=1, max_length=5000)

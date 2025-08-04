@@ -1,6 +1,6 @@
 import json
 import re
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 from loguru import logger
 
 
@@ -19,7 +19,7 @@ class LLMService:
             raise ValueError("MODEL environment variable is required")
         
         try:
-            self.model = OpenAI(
+            self.model = ChatOpenAI(
                 model=model,
                 temperature=0.0,
                 max_retries=3,
@@ -51,3 +51,5 @@ class LLMService:
             
             logger.error(f"Could not extract JSON from response: {response_text[:200]}...")
             return {}
+
+    
