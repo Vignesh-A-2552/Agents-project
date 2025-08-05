@@ -1,41 +1,104 @@
+from datetime import datetime
+from langgraph.graph import StateGraph, END
 from core.llm_service import LLMService
 from core.prompt_service import PromptService
 from services.vectordb_service import VectorDBService
+from models.types import ConversationState
 from loguru import logger
 
 
 class ConversationService:
-    """Service class for handling conversation-related operations with RAG support."""
+    """Service class for handling conversation-related operations with RAG support using agent architecture."""
 
     def __init__(self, llm_service: LLMService = None, prompt_service: PromptService = None, vectordb_service: VectorDBService = None):
-        # Initialize any required resources, e.g., chat model, database connections, etc.
-        self.llm_service = llm_service
-        self.prompt_service = prompt_service
-        self.vectordb_service = vectordb_service or VectorDBService()
+        logger.info("Initializing Conversation Service")
+        self.llm_service = llm_service or LLMService()
+        self.prompt_service = prompt_service or PromptService()
+        self.vectordb_service = vectordb_service
+        logger.success("Conversation Service initialized successfully")
 
-    def ask_question(self, question: str, use_rag: bool = True) -> str:
-        """Ask a question to the chat model with optional RAG support."""
-        try:
-            enhanced_prompt = question
+    async def parse_question_input(self, state: ConversationState) -> ConversationState:
+        """Parse and validate the input question."""
+        logger.info(f"Parsing question input - Use RAG: {state.get('use_rag', True)}")
+        start_time = datetime.now()
+        
+        question = state["question"]
+        logger.debug(f"Question length: {len(question)} characters")
+
+        if not question or len(question.strip()) == 0:
+            logger.error("Invalid question: empty or whitespace only")
+            state["error"] = "Invalid question: empty or whitespace only"
+            return state
+        
+        if len(question) > 10000:
+            logger.error(f"Question too long: {len(question)} characters")
+            state["error"] = "Question too long (max 10,000 characters)"
+            return state
+
+        processing_time = (datetime.now() - start_time).total_seconds()
+        state["processing_time"] = processing_time
+        logger.success(f"Question input parsed successfully in {processing_time:.3f}s")
+        return state
+
+    async def retrieve_context(self, state: ConversationState) -> ConversationState:
+        """Retrieve relevant documents using RAG if enabled."""
+        if state.get("error"):
+            return state
             
-            context = ""
-            if use_rag:
-                # Retrieve relevant documents
+        logger.info("Starting context retrieval")
+        try:
+            if state.get("use_rag", True) and self.vectordb_service:
+                question = state["question"]
                 relevant_docs = self.vectordb_service.search_similar_documents(question, k=4)
                 
                 if relevant_docs:
-                    # Create context from retrieved documents
+                    state["relevant_documents"] = relevant_docs
                     context = self._create_context_from_documents(relevant_docs)
+                    state["context"] = context
                     logger.info(f"Enhanced prompt with {len(relevant_docs)} relevant documents")
                 else:
                     logger.info("No relevant documents found, using original question")
-            
-            # Get the conversation prompt template
-            conversation_prompt = self.prompt_service.get_conversation_prompt(question, context)
-            logger.debug(f"Generated conversation prompt: {conversation_prompt}")
+                    state["context"] = ""
+            else:
+                logger.info("RAG disabled or vectordb_service not available")
+                state["context"] = ""
+                
+        except Exception as e:
+            logger.error(f"Error in context retrieval: {e}")
+            state["context"] = ""
+        
+        return state
 
-            # Generate response using LLM service
-            response = self.llm_service.model.invoke(conversation_prompt)
+    async def enhance_prompt(self, state: ConversationState) -> ConversationState:
+        """Enhance the prompt with context and generate the final prompt."""
+        if state.get("error"):
+            return state
+            
+        logger.info("Enhancing prompt with context")
+        try:
+            question = state["question"]
+            context = state.get("context", "")
+            
+            enhanced_prompt = self.prompt_service.get_conversation_prompt(question, context)
+            state["enhanced_prompt"] = enhanced_prompt
+            logger.debug(f"Generated enhanced prompt: {enhanced_prompt}")
+            
+        except Exception as e:
+            logger.error(f"Error enhancing prompt: {e}")
+            state["error"] = f"Error enhancing prompt: {str(e)}"
+        
+        return state
+
+    async def generate_response(self, state: ConversationState) -> ConversationState:
+        """Generate response using LLM service."""
+        if state.get("error"):
+            return state
+            
+        logger.info("Generating LLM response")
+        try:
+            enhanced_prompt = state["enhanced_prompt"]
+            
+            response = await self.llm_service.model.ainvoke(enhanced_prompt)
             logger.debug(f"Raw LLM response: {repr(response)}")
             
             # Handle different response types from langchain
@@ -50,11 +113,42 @@ class ConversationService:
             
             # Ensure response is not empty
             if not response_text:
-                return "I apologize, but I couldn't generate a proper response. Please try asking your question again."
-            
-            return response_text
+                state["response"] = "I apologize, but I couldn't generate a proper response. Please try asking your question again."
+            else:
+                state["response"] = response_text
+                
         except Exception as e:
-            # Fallback response if AI service fails
+            logger.error(f"Error generating response: {e}")
+            state["error"] = f"Error generating response: {str(e)}"
+        
+        return state
+
+    async def finalize_output(self, state: ConversationState) -> ConversationState:
+        """Finalize the response and handle any errors."""
+        if state.get("error"):
+            state["response"] = f"I'm sorry, I'm having trouble processing your question right now. Please try again later. Error: {state['error']}"
+        
+        logger.success("Response generation completed")
+        return state
+
+    async def ask_question(self, question: str, use_rag: bool = True) -> str:
+        """Ask a question to the chat model with optional RAG support using agent workflow."""
+        try:
+            # Build the agent workflow
+            agent = await self.build_agent()
+            
+            # Create initial state
+            initial_state: ConversationState = {
+                "question": question,
+                "use_rag": use_rag
+            }
+            
+            # Execute the workflow
+            result = await agent.ainvoke(initial_state)
+            
+            return result.get("response", "I apologize, but I couldn't generate a response.")
+            
+        except Exception as e:
             logger.error(f"Error in ask_question: {e}")
             return f"I'm sorry, I'm having trouble processing your question right now. Please try again later. Error: {str(e)}"
     
@@ -84,3 +178,75 @@ class ConversationService:
         except Exception as e:
             logger.error(f"Error getting vector store status: {e}")
             return {"status": "error", "error": str(e)}
+
+    async def build_agent(self):
+        """Build the conversation workflow graph."""
+        logger.info("Building conversation workflow graph")
+        workflow = StateGraph(ConversationState)
+        
+        # Add nodes
+        workflow.add_node("parse_input", self.parse_question_input)
+        workflow.add_node("retrieve_context", self.retrieve_context)
+        workflow.add_node("enhance_prompt", self.enhance_prompt)
+        workflow.add_node("generate_response", self.generate_response)
+        workflow.add_node("finalize_output", self.finalize_output)
+
+        # Add edges for sequential flow
+        workflow.add_edge("parse_input", "retrieve_context")
+        workflow.add_edge("retrieve_context", "enhance_prompt")
+        workflow.add_edge("enhance_prompt", "generate_response")
+        workflow.add_edge("generate_response", "finalize_output")
+        workflow.add_edge("finalize_output", END)
+
+        # Set entry point
+        workflow.set_entry_point("parse_input")
+        
+        compiled_workflow = workflow.compile()
+        logger.success("Conversation workflow compiled successfully")
+        return compiled_workflow
+
+    async def process_question(self, question: str, use_rag: bool = True) -> dict:
+        """Process a question using the agent workflow and return structured response."""
+        logger.info(f"Processing question - Use RAG: {use_rag}")
+        start_time = datetime.now()
+        
+        try:
+            # Create initial state
+            initial_state: ConversationState = {
+                "question": question,
+                "use_rag": use_rag
+            }
+            
+            # Build and execute the workflow
+            agent = await self.build_agent()
+            result = await agent.ainvoke(initial_state)
+            
+            processing_time = (datetime.now() - start_time).total_seconds()
+            
+            # Return structured response
+            response = {
+                "success": True,
+                "message": result.get("response", "I apologize, but I couldn't generate a response."),
+                "processing_time": processing_time,
+                "use_rag": use_rag,
+                "context_used": bool(result.get("context", "")),
+                "documents_found": len(result.get("relevant_documents", [])),
+                "error": None
+            }
+            
+            logger.success(f"Question processed successfully in {processing_time:.3f}s")
+            return response
+            
+        except Exception as e:
+            processing_time = (datetime.now() - start_time).total_seconds()
+            logger.error(f"Error processing question: {e}", exc_info=True)
+            
+            return {
+                "success": False,
+                "message": f"I'm sorry, I'm having trouble processing your question right now. Please try again later.",
+                "processing_time": processing_time,
+                "use_rag": use_rag,
+                "context_used": False,
+                "documents_found": 0,
+                "error": str(e)
+            }

@@ -19,3 +19,14 @@ class CodeReviewState(TypedDict):
     requires_human_review: NotRequired[bool]
     analysis_complete: NotRequired[bool]
     processing_time: NotRequired[float]
+
+
+class ConversationState(TypedDict):
+    question: Required[str]
+    context: NotRequired[str]
+    relevant_documents: NotRequired[Optional[List[dict]]]
+    enhanced_prompt: NotRequired[str]
+    response: NotRequired[str]
+    use_rag: NotRequired[bool]
+    processing_time: NotRequired[float]
+    error: NotRequired[Optional[str]]

@@ -1,52 +1,19 @@
 from datetime import datetime
-from typing import Dict, Any, Optional
 from fastapi import HTTPException, APIRouter, Request, Depends
 from loguru import logger
 from models.schemas import CodeReviewRequest, CodeReviewResponse
 from models.types import CodeReviewState
 from config.container import Container
 from dependency_injector.wiring import inject, Provide
+from services.code_review_service import CodeReviewService
+from app.dependencies import get_code_review_service
 
 router = APIRouter(prefix="/api/v1/review", tags=["Code Review"])
-
-# Initialize code review graph (singleton)
-code_review_graph = None
-
-
-@inject
-async def get_code_review_service(
-    code_review_service=Provide[Container.code_review_service]
-):
-    """Dependency to get code review service."""
-    global code_review_graph
-    if code_review_graph is None:
-        raise HTTPException(status_code=503, detail="Code review system not initialized")
-    return code_review_graph
-
-
-@router.on_event("startup")
-@inject
-async def initialize_review_system(
-    code_review_service=Provide[Container.code_review_service]
-):
-    """Initialize the code review system on startup."""
-    global code_review_graph
-    try:
-        logger.info("Initializing Code Review System...")
-        service = code_review_service
-        code_review_graph = await service.build_agent()
-        logger.success("Code Review System initialized successfully!")
-    except Exception as e:
-        logger.critical(f"Failed to initialize Code Review System: {e}", exc_info=True)
-        raise
-
 
 @router.post("/analyze", response_model=CodeReviewResponse)
 async def review_code(
     request: CodeReviewRequest, 
-    http_request: Request,
-    # current_user: Optional[Dict[str, Any]] = Depends(get_optional_user),
-    review_service = Depends(get_code_review_service)
+    review_service: CodeReviewService = Depends(get_code_review_service)
 ):
     """
     Analyze code for syntax, security, performance, and best practice issues.
@@ -58,9 +25,6 @@ async def review_code(
     
     Authentication is optional but recommended for better tracking.
     """
-    client_ip = http_request.client.host if http_request.client else "unknown"
-    # user_info = f"User: {current_user.get('username')}" if current_user else "Anonymous"
-    # logger.info(f"REQUEST /review/analyze from {client_ip} - {user_info} - Language: {request.language}, Code length: {len(request.code)}")
     
     start_time = datetime.now()
     
@@ -74,7 +38,7 @@ async def review_code(
         }
         
         # Run analysis
-        result = await review_service.ainvoke(state)
+        result = await review_service.analyze_code(state)
         
         # Calculate processing time
         processing_time = (datetime.now() - start_time).total_seconds()
@@ -152,12 +116,12 @@ async def get_review_system_status(request: Request):
     logger.info(f"REQUEST /review/status from {client_ip}")
     
     response = {
-        "status": "operational" if code_review_graph is not None else "not_initialized",
-        "initialized": code_review_graph is not None,
+        "status": "operational",
+        "initialized": True,
         "supported_languages": ["python", "javascript"],
         "max_code_length": 50000,
         "timestamp": datetime.now().isoformat()
     }
-    
-    logger.info(f"RESPONSE /review/status: System {'operational' if code_review_graph else 'not initialized'}")
+
+    logger.info(f"RESPONSE /review/status: System {'operational' if response['status'] == 'operational' else 'not initialized'}")
     return response

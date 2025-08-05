@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, status, HTTPException, Depends, File, UploadFile
 from loguru import logger
 from models.schemas import ChatRequest, ChatResponse, DocumentListResponse, DeleteDocumentResponse, DocumentInfo
@@ -14,17 +15,33 @@ from services.vectordb_service import VectorDBService
 router = APIRouter(prefix="/api/v1", tags=["Conversation"])
 
 @router.post("/query", status_code=status.HTTP_200_OK, response_model=ChatResponse)
-def create_chat(
+async def create_chat(
     request: ChatRequest,
     conversation_service: ConversationService = Depends(get_conversation_service)
 ):
-    """Create a new chat session."""
+    """Create a new chat session with enhanced error handling and logging."""
+    start_time = datetime.now()
+    
     try:
-        logger.info(f"Processing chat message: {request.message}")
-        message = conversation_service.ask_question(request.message)
-        return ChatResponse(message=message)
+        logger.info(f"REQUEST /query - Message length: {len(request.message)} characters")
+        
+        # Process question using the new structured method
+        result = await conversation_service.process_question(request.message, use_rag=True)
+        
+        # Calculate total processing time
+        total_processing_time = (datetime.now() - start_time).total_seconds()
+        
+        if result["success"]:
+            logger.info(f"RESPONSE /query - Success: RAG={result['use_rag']}, Context={result['context_used']}, Docs={result['documents_found']}, Time={total_processing_time:.3f}s")
+            return ChatResponse(message=result["message"])
+        else:
+            logger.warning(f"RESPONSE /query - Failed: {result['error']}, Time={total_processing_time:.3f}s")
+            # Still return the message even if there was an error, as it contains a user-friendly error message
+            return ChatResponse(message=result["message"])
+            
     except Exception as e:
-        logger.error(f"Error processing chat message: {e}", exc_info=True)
+        processing_time = (datetime.now() - start_time).total_seconds()
+        logger.error(f"Error processing chat message: {e}, Time={processing_time:.3f}s", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error during chat processing")
 
 @router.post("/upload", status_code=status.HTTP_200_OK)

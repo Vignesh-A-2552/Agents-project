@@ -13,18 +13,6 @@ router.include_router(review.router)
 router.include_router(conversation.router)
 
 
-@router.on_event("startup")
-async def startup_event():
-    """Initialize the application on startup."""
-    try:
-        logger.info("Initializing Application...")
-        settings.validate_settings()
-        logger.success("Application initialized successfully!")
-    except Exception as e:
-        logger.critical(f"Failed to initialize Application: {e}", exc_info=True)
-        raise
-
-
 @router.get("/health", response_model=HealthResponse)
 async def health_check(request: Request):
     """Health check endpoint."""
@@ -38,5 +26,6 @@ async def health_check(request: Request):
     
     logger.info(f"RESPONSE /health: {response.status}")
     return response
+
 
 

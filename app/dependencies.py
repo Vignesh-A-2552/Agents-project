@@ -28,3 +28,11 @@ def get_vectordb_service(
 ):
     """Dependency injection for VectorDBService."""
     return vectordb_service
+
+@inject
+async def get_code_review_service(
+    code_review_service=Provide[Container.code_review_service]
+) :
+    """Dependency to get code review service."""
+    return code_review_service
+

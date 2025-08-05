@@ -234,3 +234,30 @@ class CodeReviewService:
         compiled_workflow = workflow.compile()
         logger.success("Code review workflow compiled successfully")
         return compiled_workflow
+
+    async def analyze_code(self, state: CodeReviewState) -> CodeReviewState:
+        """Public method to analyze code using the agent workflow."""
+        logger.info("Starting code analysis")
+        try:
+            # Build and execute the workflow
+            workflow = await self.build_agent()
+            result = await workflow.ainvoke(state)
+            logger.success("Code analysis completed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Error in code analysis: {e}", exc_info=True)
+            # Return error state
+            return {
+                **state,
+                "analysis_complete": True,
+                "severity_level": "error",
+                "requires_human_review": True,
+                "syntax_issues": [{"error": f"Analysis failed: {str(e)}"}],
+                "security_vulnerabilities": [],
+                "performance_issues": [],
+                "style_violations": [],
+                "best_practice_violations": [],
+                "explanations": [],
+                "improvement_suggestions": [],
+                "learning_resources": []
+            }
