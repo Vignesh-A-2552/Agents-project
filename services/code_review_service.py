@@ -4,8 +4,8 @@ from langgraph.graph import StateGraph, END
 from loguru import logger
 
 from models.types import CodeReviewState
-from .llm_service import LLMService
-from .prompt_service import PromptService
+from core.llm_service import LLMService
+from core.prompt_service import PromptService
 
 
 class CodeReviewService:

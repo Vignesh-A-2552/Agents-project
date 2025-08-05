@@ -2,6 +2,7 @@ from fastapi import HTTPException, APIRouter, status, Depends
 from loguru import logger
 from models.schemas import LoginRequest, LoginResponse, UserCreateRequest, SignupResponse
 from ..dependencies import get_auth_service
+from services.auth_service import AuthService
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -9,9 +10,16 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 @router.post("/signup", status_code=status.HTTP_200_OK, response_model=SignupResponse)
 def signup(
     request: UserCreateRequest,
-    auth_service = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service)
 ) -> SignupResponse:
-    """ Create a new user account.
+    """ 
+    Create a new user account.
+    This endpoint allows users to sign up by providing their email, username, and password.
+    It uses the AuthService to handle user creation and returns a success message with the user ID.
+    Args:
+        request (UserCreateRequest): The user creation request containing email, username, and password.
+    Returns:
+        SignupResponse: Contains a success message and the user ID.
     """
     try:
         logger.info(f"REQUEST /auth/signup - Email: {request.email}, Username: {request.username}")
@@ -35,9 +43,16 @@ def signup(
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=LoginResponse)
 def login(
     request: LoginRequest,
-    auth_service = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service)
 ) -> LoginResponse:
-    """ Authenticate user and return access and refresh tokens.
+    """ 
+    Authenticate user and return access and refresh tokens.
+    This endpoint allows users to log in by providing their email and password.
+    It uses the AuthService to verify credentials and generate JWT tokens.
+    Args:
+        request (LoginRequest): The login request containing email and password.
+    Returns:
+        LoginResponse: Contains access token, refresh token, token type, and expiration time.
     """
     try:
         logger.info(f"REQUEST /auth/login - Email: {request.email}")
