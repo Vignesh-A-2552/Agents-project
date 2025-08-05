@@ -12,7 +12,7 @@ container = Container()
 from app.api import router
 
 # Wire the container with all modules that use injection
-container.wire(modules=["app.routers.auth", "app.routers.review","app.routers.chat"])
+container.wire(modules=["app.routers.auth", "app.routers.review","app.routers.conversation"])
 
 app = FastAPI(
     title=settings.APP_TITLE,

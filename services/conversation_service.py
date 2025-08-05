@@ -4,8 +4,8 @@ from services.vectordb_service import VectorDBService
 from loguru import logger
 
 
-class ChatService:
-    """Service class for handling chat-related operations with RAG support."""
+class ConversationService:
+    """Service class for handling conversation-related operations with RAG support."""
 
     def __init__(self, llm_service: LLMService = None, prompt_service: PromptService = None, vectordb_service: VectorDBService = None):
         # Initialize any required resources, e.g., chat model, database connections, etc.
@@ -18,6 +18,7 @@ class ChatService:
         try:
             enhanced_prompt = question
             
+            context = ""
             if use_rag:
                 # Retrieve relevant documents
                 relevant_docs = self.vectordb_service.search_similar_documents(question, k=4)
@@ -25,17 +26,16 @@ class ChatService:
                 if relevant_docs:
                     # Create context from retrieved documents
                     context = self._create_context_from_documents(relevant_docs)
-                    enhanced_prompt = self._create_rag_prompt(question, context)
                     logger.info(f"Enhanced prompt with {len(relevant_docs)} relevant documents")
                 else:
                     logger.info("No relevant documents found, using original question")
             
-            # Get the chat prompt template
-            chat_prompt = self.prompt_service.get_chat_prompt(enhanced_prompt)
-            logger.debug(f"Generated chat prompt: {chat_prompt}")
-            
+            # Get the conversation prompt template
+            conversation_prompt = self.prompt_service.get_conversation_prompt(question, context)
+            logger.debug(f"Generated conversation prompt: {conversation_prompt}")
+
             # Generate response using LLM service
-            response = self.llm_service.model.invoke(chat_prompt)
+            response = self.llm_service.model.invoke(conversation_prompt)
             logger.debug(f"Raw LLM response: {repr(response)}")
             
             # Handle different response types from langchain
@@ -76,21 +76,6 @@ class ChatService:
             logger.error(f"Error creating context from documents: {e}")
             return ""
     
-    def _create_rag_prompt(self, question: str, context: str) -> str:
-        """Create an enhanced prompt combining the question with retrieved context."""
-        if not context:
-            return question
-        
-        rag_prompt = f"""Based on the following context from uploaded documents, please answer the question.
-
-Context:
-{context}
-
-Question: {question}
-
-Please provide a comprehensive answer based on the context provided. If the context doesn't contain enough information to fully answer the question, please indicate what information is missing and provide the best answer possible with the available context."""
-        
-        return rag_prompt
     
     def get_vector_store_status(self) -> dict:
         """Get information about the vector store status."""

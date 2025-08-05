@@ -3,7 +3,7 @@ from services.auth_service import AuthService
 from core.llm_service import LLMService
 from core.prompt_service import PromptService
 from services.code_review_service import CodeReviewService
-from services.chat_service import ChatService
+from services.conversation_service import ConversationService
 from Infrastructure.client.auth_repository import AuthRepository
 from config.settings import settings
 from services.document_loader_service import DocumentLoaderService
@@ -39,10 +39,10 @@ class Container(containers.DeclarativeContainer):
         AuthService,
         repo=auth_repository
     )
-    
-    # Chat Service
-    chat_service = providers.Factory(
-        ChatService,
+
+    # Conversation Service
+    conversation_service = providers.Factory(
+        ConversationService,
         llm_service=llm_service,
         prompt_service=prompt_service,
         vectordb_service=vectordb_service

@@ -16,10 +16,10 @@ class PromptConfig(BaseModel):
     prompt: str = Field(..., description="The actual prompt template")
 
 
-class ChatConfig(BaseModel):
-    """Configuration for chat prompts."""
-    
-    CHAT_PROMPT_V1: PromptConfig
+class ConversationConfig(BaseModel):
+    """Configuration for conversation prompts."""
+
+    CONVERSATION_PROMPT_V1: PromptConfig
 
 
 class CodeReviewConfig(BaseModel):
@@ -37,7 +37,7 @@ class CodeReviewConfig(BaseModel):
 class AllPromptsConfig(BaseModel):
     """Configuration for all prompt categories."""
     
-    chat: ChatConfig
+    conversation: ConversationConfig
     code_review: CodeReviewConfig
 
 
@@ -89,22 +89,22 @@ def load_config(config_path: str) -> Dict[str, Any]:
         raise yaml.YAMLError(f"Error parsing YAML configuration: {str(e)}")
 
 
-def load_chat_config(config_path: str = "chat_config.yml") -> ChatConfig:
+def load_conversation_config(config_path: str = "conversation_config.yml") -> ConversationConfig:
     """
-    Load the chat configuration from a YAML file and convert it to a ChatConfig object.
-    
+    Load the conversation configuration from a YAML file and convert it to a ConversationConfig object.
+
     Args:
         config_path: Name of the YAML configuration file in the prompts directory.
         
     Returns:
-        ChatConfig object containing the parsed configuration.
+        ConversationConfig object containing the parsed configuration.
         
     Raises:
         FileNotFoundError: If the configuration file cannot be found.
         yaml.YAMLError: If the YAML file is malformed or cannot be parsed.
     """
     config_dict = load_prompt_config(config_path)
-    return ChatConfig(**config_dict)
+    return ConversationConfig(**config_dict)
 
 
 def load_code_review_config(config_path: str = "code_review_config.yml") -> CodeReviewConfig:

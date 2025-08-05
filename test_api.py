@@ -10,7 +10,7 @@ def test_upload():
         print("Upload Response:", response.status_code, response.json())
 
 def test_query():
-    payload = {"message": "What is the document about?"}
+    payload = {"message": "What is the cancer process?"}
     headers = {"Content-Type": "application/json"}
     response = requests.post(f"{BASE_URL}/query", json=payload, headers=headers)
     print("Query Response:", response.status_code, response.json())

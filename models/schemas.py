@@ -77,3 +77,24 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     message: str = Field(..., description="Bot response", min_length=1, max_length=5000)
+
+
+class DocumentInfo(BaseModel):
+    """Information about a document in the vector store."""
+    filename: str = Field(..., description="Name of the document file")
+    chunk_count: int = Field(..., description="Number of chunks for this document")
+    total_characters: int = Field(..., description="Total character count across all chunks")
+
+
+class DocumentListResponse(BaseModel):
+    """Response model for listing all documents."""
+    documents: List[DocumentInfo] = Field(..., description="List of documents in vector store")
+    total_documents: int = Field(..., description="Total number of unique documents")
+    total_chunks: int = Field(..., description="Total number of chunks across all documents")
+
+
+class DeleteDocumentResponse(BaseModel):
+    """Response model for document deletion."""
+    success: bool = Field(..., description="Whether the deletion was successful")
+    message: str = Field(..., description="Status message")
+    filename: str = Field(..., description="Name of the deleted document")
