@@ -124,6 +124,47 @@ def get_all_documents(
         raise HTTPException(status_code=500, detail="Internal server error while retrieving documents")
 
 
+@router.get("/debug/search/{query}", status_code=status.HTTP_200_OK)
+def debug_search(
+    query: str,
+    k: int = 6,
+    vectordb_service: VectorDBService = Depends(get_vectordb_service)
+):
+    """Debug endpoint to test vector search directly."""
+    try:
+        logger.info(f"DEBUG SEARCH - Query: '{query}', k={k}")
+        
+        # Get vector store info first
+        vector_info = vectordb_service.get_vector_store_info()
+        
+        # Perform search with scores
+        results_with_scores = vectordb_service.search_with_scores(query, k=k)
+        
+        # Format results for response
+        search_results = []
+        for i, (doc, score) in enumerate(results_with_scores):
+            search_results.append({
+                "rank": i + 1,
+                "score": float(score),
+                "source_file": doc.metadata.get('source_file', 'Unknown'),
+                "content_preview": doc.page_content[:200],
+                "content_length": len(doc.page_content),
+                "metadata": doc.metadata
+            })
+        
+        response = {
+            "query": query,
+            "vector_store_info": vector_info,
+            "results_found": len(results_with_scores),
+            "results": search_results
+        }
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in debug search: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error during debug search: {str(e)}")
+
 @router.delete("/vector-store/documents/{filename}", status_code=status.HTTP_200_OK, response_model=DeleteDocumentResponse)
 def delete_document(
     filename: str,

@@ -79,9 +79,18 @@ class VectorDBService:
                 logger.warning("No vector store available for search")
                 return []
             
+            logger.debug(f"DEBUG - VectorDB: Searching for query '{query}' with k={k}")
+            
             # Perform similarity search with scores
             results = self.vector_store.similarity_search_with_score(query, k=k)
             logger.info(f"Found {len(results)} similar documents with scores")
+            
+            # Debug logging for each result
+            for i, (doc, score) in enumerate(results):
+                source = doc.metadata.get('source_file', 'Unknown')
+                content_preview = doc.page_content[:100].replace('\n', ' ')
+                logger.debug(f"DEBUG - VectorDB Result {i+1}: Score={score:.4f}, Source={source}, Content='{content_preview}...'")
+            
             return results
             
         except Exception as e:
