@@ -1,7 +1,7 @@
 # Virtual Environment
 agent-venv/
 .venv/
-env/
+ env/
 ENV/
 
 # Logs
