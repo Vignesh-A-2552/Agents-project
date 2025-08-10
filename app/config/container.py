@@ -1,15 +1,15 @@
 from dependency_injector import containers, providers
-from services.auth_service import AuthService
-from core.llm_service import LLMService
-from core.prompt_service import PromptService
-from services.code_review_service import CodeReviewService
-from services.conversation_service import ConversationService
-from Infrastructure.client.auth_repository import AuthRepository
-from config.settings import settings
-from services.document_loader_service import DocumentLoaderService
-from services.vectordb_service import VectorDBService
-from agents.code_review_agent.CodeReviewAgent import CodeReviewAgent
-from agents.conversation_agent.ConversationAgent import ConversationAgent
+from app.services.auth_service import AuthService
+from app.core.llm_service import LLMService
+from app.core.prompt_service import PromptService
+from app.services.code_review_service import CodeReviewService
+from app.services.conversation_service import ConversationService
+from app.Infrastructure.client.auth_repository import AuthRepository
+from app.config.settings import settings
+from app.services.document_loader_service import DocumentLoaderService
+from app.services.vectordb_service import VectorDBService
+from app.agents.code_review_agent.CodeReviewAgent import CodeReviewAgent
+from app.agents.conversation_agent.ConversationAgent import ConversationAgent
 
 
 class Container(containers.DeclarativeContainer):

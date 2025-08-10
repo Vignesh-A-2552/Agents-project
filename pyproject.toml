@@ -1,0 +1,29 @@
+[project]
+name = "agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "bcrypt>=4.3.0",
+    "dependency-injector>=4.48.1",
+    "faiss-cpu>=1.11.0.post1",
+    "fastapi>=0.116.1",
+    "langchain>=0.3.27",
+    "langchain-community>=0.3.27",
+    "langchain-huggingface>=0.3.1",
+    "langchain-openai>=0.3.28",
+    "langgraph>=0.6.4",
+    "loguru>=0.7.3",
+    "psycopg2-binary>=2.9.10",
+    "pydantic>=2.11.7",
+    "pyjwt>=2.10.1",
+    "pypdf>=5.9.0",
+    "python-dotenv>=1.1.1",
+    "python-multipart>=0.0.20",
+    "pyyaml>=6.0.2",
+    "sentence-transformers>=5.1.0",
+    "torch>=2.8.0",
+    "typing-extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
+]

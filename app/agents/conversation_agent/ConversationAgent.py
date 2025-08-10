@@ -149,26 +149,6 @@ class ConversationAgent:
         logger.success("Response generation completed")
         return state
 
-    async def ask_question(self, question: str, use_rag: bool = True) -> str:
-        """Ask a question to the chat model with optional RAG support using agent workflow."""
-        try:
-            # Build the agent workflow
-            agent = await self.build_agent()
-            
-            # Create initial state
-            initial_state: ConversationState = {
-                "question": question,
-                "use_rag": use_rag
-            }
-            
-            # Execute the workflow
-            result = await agent.ainvoke(initial_state)
-            
-            return result.get("response", "I apologize, but I couldn't generate a response.")
-            
-        except Exception as e:
-            logger.error(f"Error in ask_question: {e}")
-            return f"I'm sorry, I'm having trouble processing your question right now. Please try again later. Error: {str(e)}"
     
     def _create_context_from_documents(self, documents) -> str:
         """Create a context string from retrieved documents."""

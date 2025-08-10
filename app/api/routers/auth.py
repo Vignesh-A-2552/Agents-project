@@ -1,11 +1,10 @@
 from fastapi import HTTPException, APIRouter, status, Depends
 from loguru import logger
-from models.schemas import LoginRequest, LoginResponse, UserCreateRequest, SignupResponse
-from ..dependencies import get_auth_service
-from services.auth_service import AuthService
+from app.models.schemas import UserCreateRequest, SignupResponse, LoginRequest, LoginResponse
+from app.services.auth_service import AuthService
+from app.api.dependencies import get_auth_service
 
-
-router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
+router = APIRouter()
 
 @router.post("/signup", status_code=status.HTTP_200_OK, response_model=SignupResponse)
 def signup(
@@ -22,15 +21,12 @@ def signup(
         SignupResponse: Contains a success message and the user ID.
     """
     try:
-        logger.info(f"REQUEST /auth/signup - Email: {request.email}, Username: {request.username}")
         
         # Create new user using injected service
         user_id = auth_service.create_user(request.email, request.username, request.password)
         
         if not user_id:
             raise HTTPException(status_code=400, detail="User creation failed")
-        
-        logger.info(f"RESPONSE /auth/signup: User {request.username} created successfully with ID {user_id}")
         return SignupResponse(message="User created successfully", user_id=user_id)
         
     except HTTPException:
@@ -55,7 +51,6 @@ def login(
         LoginResponse: Contains access token, refresh token, token type, and expiration time.
     """
     try:
-        logger.info(f"REQUEST /auth/login - Email: {request.email}")
         
         # Authenticate user using injected service
         auth_result = auth_service.authenticate_user(request.email, request.password)
@@ -63,7 +58,6 @@ def login(
         if not auth_result:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        logger.info(f"RESPONSE /auth/login: User {request.email} logged in successfully")
         return LoginResponse(
             access_token=auth_result['access_token'],
             refresh_token=auth_result['refresh_token'],

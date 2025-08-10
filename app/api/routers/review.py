@@ -1,14 +1,12 @@
 from datetime import datetime
 from fastapi import HTTPException, APIRouter, Request, Depends
 from loguru import logger
-from models.schemas import CodeReviewRequest, CodeReviewResponse
-from models.types import CodeReviewState
-from config.container import Container
-from dependency_injector.wiring import inject, Provide
-from services.code_review_service import CodeReviewService
-from app.dependencies import get_code_review_service
+from app.models.schemas import CodeReviewRequest, CodeReviewResponse
+from app.models.types import CodeReviewState
+from app.services.code_review_service import CodeReviewService
+from app.api.dependencies import get_code_review_service
 
-router = APIRouter(prefix="/api/v1/review", tags=["Code Review"])
+router = APIRouter()
 
 @router.post("/analyze", response_model=CodeReviewResponse)
 async def review_code(
@@ -17,13 +15,9 @@ async def review_code(
 ):
     """
     Analyze code for syntax, security, performance, and best practice issues.
-    
-    - **code**: The source code to analyze
-    - **language**: Programming language (python, javascript)
-    - **file_type**: File extension (py, js)
-    - **context**: Optional context about the code
-    
+
     Authentication is optional but recommended for better tracking.
+    
     """
     
     start_time = datetime.now()
@@ -77,11 +71,9 @@ async def review_code(
                 "best_practice_violations": best_practice_count,
                 "code_length": len(request.code),
                 "language": request.language,
-                # "analyzed_by": current_user.get("username") if current_user else "anonymous"
             }
         )
         
-        # logger.info(f"RESPONSE /review/analyze: {user_info}, Severity={response.severity_level}, Issues={total_issues}, Processing={processing_time:.3f}s")
         return response
         
     except ValueError as e:
@@ -91,37 +83,3 @@ async def review_code(
         logger.error(f"Error during code review: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-
-@router.get("/supported-languages")
-async def get_supported_languages(request: Request):
-    """Get list of supported programming languages."""
-    client_ip = request.client.host if request.client else "unknown"
-    logger.info(f"REQUEST /review/supported-languages from {client_ip}")
-    
-    response = {
-        "languages": [
-            {"name": "Python", "code": "python", "file_extensions": ["py"]},
-            {"name": "JavaScript", "code": "javascript", "file_extensions": ["js"]}
-        ]
-    }
-    
-    logger.info(f"RESPONSE /review/supported-languages: {len(response['languages'])} languages")
-    return response
-
-
-@router.get("/status")
-async def get_review_system_status(request: Request):
-    """Get code review system status."""
-    client_ip = request.client.host if request.client else "unknown"
-    logger.info(f"REQUEST /review/status from {client_ip}")
-    
-    response = {
-        "status": "operational",
-        "initialized": True,
-        "supported_languages": ["python", "javascript"],
-        "max_code_length": 50000,
-        "timestamp": datetime.now().isoformat()
-    }
-
-    logger.info(f"RESPONSE /review/status: System {'operational' if response['status'] == 'operational' else 'not initialized'}")
-    return response

@@ -1,18 +1,18 @@
 from datetime import datetime
 from fastapi import APIRouter, status, HTTPException, Depends, File, UploadFile
 from loguru import logger
-from models.schemas import ChatRequest, ChatResponse, DocumentListResponse, DeleteDocumentResponse, DocumentInfo
-from ..dependencies import ( 
+from app.models.schemas import ChatRequest, ChatResponse, DocumentListResponse, DeleteDocumentResponse, DocumentInfo
+from app.api.dependencies import ( 
     get_conversation_service, 
     get_document_loader_service,
     get_vectordb_service
 )
-from services.conversation_service import ConversationService
-from services.document_loader_service import DocumentLoaderService
-from services.vectordb_service import VectorDBService
+from app.services.conversation_service import ConversationService
+from app.services.document_loader_service import DocumentLoaderService
+from app.services.vectordb_service import VectorDBService
 
 
-router = APIRouter(prefix="/api/v1", tags=["Conversation"])
+router = APIRouter()
 
 @router.post("/query", status_code=status.HTTP_200_OK, response_model=ChatResponse)
 async def create_chat(
