@@ -1,6 +1,6 @@
 # Virtual Environment
 agent-venv/
-venv/
+.venv/
 env/
 ENV/
 
