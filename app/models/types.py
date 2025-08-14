@@ -1,5 +1,6 @@
-from typing import TypedDict, List, Optional, Dict, Any
-from typing_extensions import Required, NotRequired
+from typing import Any, Dict, List, Optional, TypedDict
+
+from typing_extensions import NotRequired, Required
 
 
 class CodeReviewState(TypedDict):

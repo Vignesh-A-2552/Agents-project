@@ -1,21 +1,22 @@
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field, validator
 
 
 class CodeReviewRequest(BaseModel):
     """Request model for code review."""
-    code: str = Field(..., description="The code to analyze", min_length=1, max_length=50000)
-    language: str = Field(..., description="Programming language (python, javascript)")
-    file_type: str = Field(..., description="File extension (py, js)")
+    code: str = Field(..., description = "The code to analyze", min_length = 1, max_length=50000)
+    language: str = Field(..., description="Programming language(python, javascript)")
+    file_type: str = Field(..., description="File extension(py, js)")
     context: Optional[str] = Field(None, description="Additional context about the code")
-    
+
     @validator('language')
     def validate_language(cls, v):
         allowed_languages = ['python', 'javascript']
         if v.lower() not in allowed_languages:
             raise ValueError(f'Language must be one of: {", ".join(allowed_languages)}')
         return v.lower()
-    
+
     @validator('file_type')
     def validate_file_type(cls, v):
         allowed_types = ['py', 'js']
@@ -50,21 +51,21 @@ class HealthResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     """Login request model."""
-    email: str = Field(..., description="User email", min_length=5, max_length=100)
-    password: str = Field(..., description="User password", min_length=6, max_length=100)
+    email: str = Field(..., description = "User email", min_length = 5, max_length=100)
+    password: str = Field(..., description = "User password", min_length = 6, max_length=100)
 
 
 class LoginResponse(BaseModel):
     """Login response model."""
     access_token: str = Field(..., description="JWT access token")
     refresh_token: str = Field(..., description="JWT refresh token")
-    token_type: str = Field(default="bearer", description="Token type")
+    token_type: str = Field(default = "bearer", description="Token type")
     expires_in: int = Field(..., description="Token expiration time in seconds")
 
 class UserCreateRequest(BaseModel):
-    email: str = Field(..., description="User email", min_length=5, max_length=100)
-    username: str = Field(..., description="Username", min_length=3, max_length=50)
-    password: str = Field(..., description="User password", min_length=6, max_length=100)
+    email: str = Field(..., description = "User email", min_length = 5, max_length=100)
+    username: str = Field(..., description = "Username", min_length = 3, max_length=50)
+    password: str = Field(..., description = "User password", min_length = 6, max_length=100)
 
 
 class SignupResponse(BaseModel):
@@ -73,10 +74,10 @@ class SignupResponse(BaseModel):
     user_id: str = Field(..., description="Created user ID")
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., description="User message", min_length=1, max_length=5000)
+    message: str = Field(..., description = "User message", min_length = 1, max_length=5000)
 
 class ChatResponse(BaseModel):
-    message: str = Field(..., description="Bot response", min_length=1, max_length=5000)
+    message: str = Field(..., description = "Bot response", min_length = 1, max_length=5000)
 
 
 class DocumentInfo(BaseModel):

@@ -1,11 +1,14 @@
-from typing import Optional, Dict, Any
-from Interface.auth_interface import AuthServiceInterface
-from config.settings import settings
+from typing import Any, Dict, Optional
+
+from app.config.settings import settings
+from app.Interface.auth_interface import AuthServiceInterface
 
 # JWT configuration
 secret_key = settings.JWT_SECRET_KEY
 algorithm = settings.JWT_ALGORITHM
 expiration = settings.JWT_EXPIRATION_HOURS
+
+
 class AuthService:
     def __init__(self, repo: AuthServiceInterface):
         """
@@ -14,13 +17,13 @@ class AuthService:
         self.repo = repo
 
     def create_user(self, email: str, username: str, password: str) -> str:
-        """        
+        """
         Create a new user in the system.
         This method hashes the password and stores the user details in the database.
         Args:
-            email (str): The email address of the user.
-            username (str): The username of the user.
-            password (str): The password of the user.
+    email (str): The email address of the user.
+            username(str): The username of the user.
+            password(str): The password of the user.
         Returns:
             str: The ID of the created user.
         Raises:
@@ -33,7 +36,7 @@ class AuthService:
         Retrieve user details by email.
         This method queries the repository for a user with the given email address.
         Args:
-            email (str): The email address of the user to retrieve.
+    email (str): The email address of the user to retrieve.
         Returns:
             Optional[Dict[str, Any]]: User details if found, otherwise None.
         """
@@ -44,8 +47,8 @@ class AuthService:
         Authenticate a user by email and password.
         This method verifies the user's credentials and generates JWT tokens if successful.
         Args:
-            email (str): The email address of the user.
-            password (str): The password of the user.
+    email (str): The email address of the user.
+            password(str): The password of the user.
         Returns:
             Optional[Dict[str, Any]]: A dictionary containing the access and refresh tokens if authentication is successful, otherwise None.
         """
@@ -54,7 +57,7 @@ class AuthService:
             # Generate both access and refresh tokens
             access_token = self.repo.generate_access_token(user, secret_key, algorithm, expiration)
             refresh_token = self.repo.generate_refresh_token(user, secret_key, algorithm)
-            
+
             return {
                 'access_token': access_token,
                 'refresh_token': refresh_token,

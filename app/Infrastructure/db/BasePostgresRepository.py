@@ -1,8 +1,7 @@
-import logging
-from typing import Any, Dict, List, Optional, Tuple
-
-import psycopg2
 from psycopg2.extras import RealDictCursor
+from typing import Any, Dict, List, Optional, Tuple
+import logging
+import psycopg2
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +14,7 @@ class BasePostgresRepository:
         """Establish connection to PostgreSQL database."""
         try:
             if self._connection is None or self._connection.closed:
-                self._connection = psycopg2.connect(
-                    self.connection_string,
+                self._connection = psycopg2.connect(self.connection_string,
                     cursor_factory=RealDictCursor
                 )
                 logger.info("Successfully connected to PostgreSQL database")
@@ -32,7 +30,7 @@ class BasePostgresRepository:
             self._connection = None
             logger.info("Disconnected from PostgreSQL database")
 
-    def execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    def execute_query(self, query: str, params: tuple=()) -> List[Dict[str, Any]]:
         """Execute a SELECT query and return results."""
         connection = self.connect()
         try:
@@ -45,7 +43,7 @@ class BasePostgresRepository:
             connection.rollback()
             raise
 
-    def execute_command(self, command: str, params: tuple = ()) -> int:
+    def execute_command(self, command: str, params: tuple=()) -> int:
         """Execute an INSERT, UPDATE, or DELETE command."""
         connection = self.connect()
         try:
@@ -58,7 +56,7 @@ class BasePostgresRepository:
             connection.rollback()
             raise
 
-    def execute_returning_command(self, command: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    def execute_returning_command(self, command: str, params: tuple=()) -> List[Dict[str, Any]]:
         """Execute an INSERT, UPDATE, or DELETE command with RETURNING clause."""
         connection = self.connect()
         try:
